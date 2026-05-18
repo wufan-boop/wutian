@@ -45,16 +45,20 @@ async def generate_listing(
             yield f"data: {json.dumps({'text': chunk}, ensure_ascii=False)}\n\n"
 
         full_text = "".join(collected)
-        record = ListingHistory(
-            user_id=current_user.id,
-            product_name=body.product_name,
-            market=body.market,
-            input_json=body.model_dump_json(),
-            result_json=full_text,
-        )
-        db.add(record)
-        db.commit()
-        yield f"data: {json.dumps({'done': True, 'id': record.id})}\n\n"
+        try:
+            record = ListingHistory(
+                user_id=current_user.id,
+                product_name=body.product_name,
+                market=body.market,
+                input_json=body.model_dump_json(),
+                result_json=full_text,
+            )
+            db.add(record)
+            db.commit()
+            yield f"data: {json.dumps({'done': True, 'id': record.id})}\n\n"
+        except Exception:
+            db.rollback()
+            yield f"data: {json.dumps({'error': '保存历史记录失败'})}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
