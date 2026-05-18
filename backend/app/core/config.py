@@ -1,7 +1,9 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
     anthropic_api_key: str
     jwt_secret: str
     jwt_expire_hours: int = 8
@@ -10,9 +12,6 @@ class Settings(BaseSettings):
     sorftime_mcp_api_key: str = ""
     maijia_mcp_url: str = ""
     maijia_mcp_api_key: str = ""
-
-    class Config:
-        env_file = ".env"
 
 
 settings = Settings()
