@@ -36,7 +36,7 @@ class HistoryItem(BaseModel):
 
 
 def _calc_margin(selling_price, fba_fee, cogs) -> Optional[float]:
-    if selling_price and selling_price > 0:
+    if selling_price is not None and selling_price > 0:
         profit = selling_price - (fba_fee or 0) - (cogs or 0)
         return round(profit / selling_price * 100, 2)
     return None
