@@ -18,3 +18,8 @@ data/
 
 # SQLite
 *.db
+
+# IDE / Tools
+.claude/
+.idea/
+.vscode/
