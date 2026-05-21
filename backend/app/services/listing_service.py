@@ -1,18 +1,32 @@
 from typing import AsyncGenerator
 
-import anthropic
+from google import genai
+from google.genai import types
 
-_async_client = anthropic.AsyncAnthropic()
+from ..core.config import settings
 
-SYSTEM_PROMPT = """你是亚马逊运营专家，专门生成高质量的亚马逊产品Listing。
-根据用户提供的产品信息，生成符合亚马逊SEO要求的Listing。
-只返回严格的JSON，不要有其他文字：
-{
-  "title": "产品标题（不超过200字符）",
-  "bullet_points": ["卖点1","卖点2","卖点3","卖点4","卖点5"],
-  "description": "产品描述（200-2000字符）",
-  "search_terms": ["关键词1","关键词2","关键词3","关键词4","关键词5"]
-}"""
+_client = genai.Client(api_key=settings.gemini_api_key)
+
+DEFAULT_SYSTEM_INSTRUCTION = """你是亚马逊运营专家，专门生成高质量的亚马逊产品Listing。
+根据用户提供的产品信息，生成符合亚马逊SEO要求的Listing，用中文直接输出可读文本，不要返回JSON。
+
+输出格式：
+
+## 标题
+（不超过200字符的英文标题）
+
+## 五点描述
+- 卖点1
+- 卖点2
+- 卖点3
+- 卖点4
+- 卖点5
+
+## 产品描述
+（200-2000字符，突出产品价值和使用场景）
+
+## Search Terms
+（5-10个核心关键词，英文，逗号分隔）"""
 
 
 def _build_prompt(data: dict) -> str:
@@ -27,13 +41,15 @@ def _build_prompt(data: dict) -> str:
     return "\n".join(lines)
 
 
-async def generate_listing_stream(data: dict) -> AsyncGenerator[str, None]:
+async def generate_listing_stream(
+    data: dict,
+    system_instruction: str = DEFAULT_SYSTEM_INSTRUCTION,
+) -> AsyncGenerator[str, None]:
     prompt = _build_prompt(data)
-    async with _async_client.messages.stream(
-        model="claude-sonnet-4-6",
-        max_tokens=2000,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}],
-    ) as stream:
-        async for text in stream.text_stream:
-            yield text
+    async for chunk in await _client.aio.models.generate_content_stream(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config=types.GenerateContentConfig(system_instruction=system_instruction),
+    ):
+        if chunk.text:
+            yield chunk.text

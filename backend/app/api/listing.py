@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from ..core.database import get_db
 from ..core.deps import get_current_user
 from ..models.listing_history import ListingHistory
+from ..models.prompt import Prompt
 from ..models.user import User
 from ..services import listing_service
 
@@ -37,10 +38,13 @@ async def generate_listing(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    prompt_row = db.query(Prompt).filter(Prompt.name == "listing").first()
+    system_instruction = prompt_row.content if prompt_row else listing_service.DEFAULT_SYSTEM_INSTRUCTION
+
     collected: List[str] = []
 
     async def event_stream():
-        async for chunk in listing_service.generate_listing_stream(body.model_dump()):
+        async for chunk in listing_service.generate_listing_stream(body.model_dump(), system_instruction):
             collected.append(chunk)
             yield f"data: {json.dumps({'text': chunk}, ensure_ascii=False)}\n\n"
 

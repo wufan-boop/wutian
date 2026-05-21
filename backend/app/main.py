@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import auth, chat, listing, product
+from .api import auth, chat, listing, product, prompts
 from .core.database import Base, engine
+from .models import prompt  # noqa: F401 — ensure table is created
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,3 +23,4 @@ app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(listing.router)
 app.include_router(product.router)
+app.include_router(prompts.router)

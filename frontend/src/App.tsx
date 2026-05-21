@@ -2,6 +2,7 @@ import {
   DownloadOutlined,
   LogoutOutlined,
   SearchOutlined,
+  SettingOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons'
 import {
@@ -420,6 +421,63 @@ function ListingPage() {
   )
 }
 
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+interface PromptItem { name: string; content: string }
+
+function SettingsPage() {
+  const { message } = AntApp.useApp()
+  const [prompts, setPrompts] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    client.get<PromptItem[]>('/prompts').then((r) => {
+      const map: Record<string, string> = {}
+      r.data.forEach((p) => { map[p.name] = p.content })
+      setPrompts(map)
+    })
+  }, [])
+
+  async function handleSave(name: string) {
+    setSaving((s) => ({ ...s, [name]: true }))
+    try {
+      await client.put(`/prompts/${name}`, { content: prompts[name] })
+      message.success('保存成功')
+    } catch {
+      message.error('保存失败')
+    } finally {
+      setSaving((s) => ({ ...s, [name]: false }))
+    }
+  }
+
+  const LABELS: Record<string, string> = {
+    product_research: '选品调研提示词',
+    listing: 'Listing 生成提示词',
+  }
+
+  return (
+    <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {Object.keys(LABELS).map((name) => (
+        <Card
+          key={name}
+          title={LABELS[name]}
+          extra={<Button type="primary" size="small" loading={saving[name]} onClick={() => handleSave(name)}>保存</Button>}
+        >
+          <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8, fontSize: 12 }}>
+            粘贴你的 System Prompt，AI 将以此为准生成报告
+          </Typography.Text>
+          <TextArea
+            value={prompts[name] ?? ''}
+            onChange={(e) => setPrompts((p) => ({ ...p, [name]: e.target.value }))}
+            autoSize={{ minRows: 12, maxRows: 30 }}
+            style={{ fontFamily: 'monospace', fontSize: 13 }}
+          />
+        </Card>
+      ))}
+    </div>
+  )
+}
+
 // ─── Shell ────────────────────────────────────────────────────────────────────
 
 function AppShell() {
@@ -453,6 +511,7 @@ function AppShell() {
           items={[
             { key: '/product', icon: <SearchOutlined />, label: '商品调研' },
             { key: '/listing', icon: <UnorderedListOutlined />, label: 'Listing 生成' },
+            ...(user?.role === 'admin' ? [{ key: '/settings', icon: <SettingOutlined />, label: '提示词设置' }] : []),
           ]}
           onClick={({ key }) => navigate(key)}
           style={{ flex: 1, border: 'none', background: 'transparent', lineHeight: '46px' }}
@@ -469,6 +528,7 @@ function AppShell() {
         <Routes>
           <Route path="/product" element={<ProductPage />} />
           <Route path="/listing" element={<ListingPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<ProductPage />} />
         </Routes>
       </Content>

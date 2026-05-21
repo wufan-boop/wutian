@@ -8,6 +8,7 @@ from app.core.database import Base, get_db
 from app.core.security import hash_password
 from app.models.listing_history import ListingHistory  # noqa: F401
 from app.models.product_history import ProductHistory  # noqa: F401
+from app.models.prompt import Prompt  # noqa: F401
 from app.models.user import User
 
 

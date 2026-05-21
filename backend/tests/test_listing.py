@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 
-async def fake_stream(data):
+async def fake_stream(data, system_instruction=None):
     chunks = ['{"title":"Test Title","bullet_points":["B1","B2","B3","B4","B5"],', '"description":"Desc","search_terms":["k1","k2","k3","k4","k5"]}']
     for chunk in chunks:
         yield chunk

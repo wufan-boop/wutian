@@ -13,13 +13,29 @@ logger = logging.getLogger(__name__)
 
 _client = genai.Client(api_key=settings.gemini_api_key)
 
-_SYSTEM_INSTRUCTION = """你是亚马逊选品专家。根据提供的真实市场数据生成完整选品分析报告。
-只返回严格JSON，不要其他文字：
-{
-  "market_overview": {"size": "描述（含月搜索量等具体数字）", "competition": "低/中/高", "avg_price": 平均价格数字},
-  "competitors": [{"asin": "B0...", "title": "标题", "price": 价格, "rating": 评分, "monthly_sales": 月销量}],
-  "analysis": {"opportunities": ["机会点"], "risks": ["风险点"], "recommendation": "综合建议"}
-}"""
+DEFAULT_SYSTEM_INSTRUCTION = """你是亚马逊选品专家。根据提供的真实市场数据生成完整选品分析报告，用中文直接输出可读文本，不要返回JSON。
+
+报告格式如下：
+
+## 市场概况
+- 月搜索量：xxx
+- 竞争程度：低/中/高
+- 平均售价：$xxx
+
+## 主要竞品
+列出3-5个竞品，每个包含：ASIN、标题、价格、评分、月销量
+
+## 市场分析
+**机会点：**
+- xxx
+
+**风险点：**
+- xxx
+
+## 综合建议
+xxx
+
+数据来自 Sorftime 真实市场数据。如某项数据缺失，直接说明原因并给出推测或建议。"""
 
 
 def _build_prompt(data: dict, market_data: Dict[str, Any]) -> str:
@@ -37,7 +53,7 @@ def _build_prompt(data: dict, market_data: Dict[str, Any]) -> str:
         lines.append("\n以下是从市场数据平台获取的真实数据，请基于这些数据进行分析：")
         lines.append(json.dumps(market_data, ensure_ascii=False, indent=2))
 
-    lines.append("\n请生成完整的选品分析报告（JSON格式）。")
+    lines.append("\n请生成完整的选品分析报告。")
     return "\n".join(lines)
 
 
@@ -95,8 +111,10 @@ async def _fetch_market_data(data: dict) -> Dict[str, Any]:
     return market_data
 
 
-async def research_product_stream(data: dict) -> AsyncGenerator[Dict[str, Any], None]:
-    # Status: fetching market data
+async def research_product_stream(
+    data: dict,
+    system_instruction: str = DEFAULT_SYSTEM_INSTRUCTION,
+) -> AsyncGenerator[Dict[str, Any], None]:
     yield {"type": "status", "content": "正在获取市场数据..."}
 
     try:
@@ -105,7 +123,6 @@ async def research_product_stream(data: dict) -> AsyncGenerator[Dict[str, Any], 
         logger.warning("_fetch_market_data failed: %s", exc)
         market_data = {}
 
-    # Status: generating report
     yield {"type": "status", "content": "正在生成分析报告..."}
 
     prompt = _build_prompt(data, market_data)
@@ -113,7 +130,7 @@ async def research_product_stream(data: dict) -> AsyncGenerator[Dict[str, Any], 
     async for chunk in await _client.aio.models.generate_content_stream(
         model="gemini-2.5-flash",
         contents=prompt,
-        config=types.GenerateContentConfig(system_instruction=_SYSTEM_INSTRUCTION),
+        config=types.GenerateContentConfig(system_instruction=system_instruction),
     ):
         if chunk.text:
             yield {"type": "text", "content": chunk.text}
