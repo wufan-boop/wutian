@@ -1,4 +1,5 @@
 import {
+  DownloadOutlined,
   LogoutOutlined,
   SearchOutlined,
   UnorderedListOutlined,
@@ -88,9 +89,95 @@ function ProductResearchTab() {
   const [margin, setMargin] = useState<number | null>(null)
   const [statusMsg, setStatusMsg] = useState('')
   const abortRef = useRef<AbortController | null>(null)
+  const [chatMessages, setChatMessages] = useState<{ role: string; content: string }[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatModel, setChatModel] = useState('gemini-2.5-flash')
+  const [chatStreaming, setChatStreaming] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+  const prevOutputRef = useRef('')
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
+
+  useEffect(() => {
+    if (output && !prevOutputRef.current) {
+      setChatMessages([{ role: 'assistant', content: '已读取调研结果，请问有什么问题？' }])
+    }
+    prevOutputRef.current = output
+  }, [output])
+
+  function handleDownload() {
+    const keyword = (form.getFieldValue('keyword') as string) || ''
+    const site = (form.getFieldValue('site') as string) || 'US'
+    const now = new Date()
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '')
+    const timeStr = now.toLocaleString('zh-CN')
+    const content = `Amazon 选品调研报告\n生成时间：${timeStr}\n关键词：${keyword}\n站点：${site}\n${'='.repeat(40)}\n${output}`
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `调研报告_${keyword.replace(/\s+/g, '-') || 'report'}_${dateStr}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleChatSend() {
+    if (!chatInput.trim() || chatStreaming) return
+    const userMsg = { role: 'user', content: chatInput.trim() }
+    const newMessages = [...chatMessages, userMsg]
+    setChatMessages([...newMessages, { role: 'assistant', content: '' }])
+    setChatInput('')
+    setChatStreaming(true)
+    try {
+      const res = await fetch('/api/chat/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ messages: newMessages, context: output, model: chatModel }),
+      })
+      const reader = res.body!.getReader()
+      const dec = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          const p = JSON.parse(line.slice(6))
+          if (p.text) {
+            setChatMessages((prev) => {
+              const updated = [...prev]
+              updated[updated.length - 1] = {
+                role: 'assistant',
+                content: updated[updated.length - 1].content + p.text,
+              }
+              return updated
+            })
+          }
+        }
+      }
+    } catch (e: unknown) {
+      if ((e as Error).name !== 'AbortError') {
+        setChatMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: 'assistant', content: '[请求失败，请重试]' },
+        ])
+      }
+    } finally {
+      setChatStreaming(false)
+    }
+  }
 
   async function handleSubmit(values: Record<string, unknown>) {
     setStreaming(true); setOutput(''); setMargin(null); setStatusMsg('')
+    setChatMessages([]); prevOutputRef.current = ''
     abortRef.current = new AbortController()
     try {
       const res = await fetch('/api/product/research', {
@@ -160,8 +247,57 @@ function ProductResearchTab() {
         )}
       </Col>
       <Col xs={24} md={16}>
-        <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>调研结果</Typography.Text>
-        <TextArea value={output} readOnly autoSize={{ minRows: 20, maxRows: 40 }} style={{ fontFamily: 'monospace', fontSize: 13 }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Typography.Text type="secondary">调研结果</Typography.Text>
+          <Button size="small" icon={<DownloadOutlined />} disabled={!output} onClick={handleDownload}>下载报告</Button>
+        </div>
+        <TextArea value={output} readOnly autoSize={{ minRows: 10, maxRows: 20 }} style={{ fontFamily: 'monospace', fontSize: 13 }} />
+
+        {output && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Typography.Text strong style={{ fontSize: 13 }}>AI 对话</Typography.Text>
+              <Select
+                value={chatModel}
+                onChange={setChatModel}
+                size="small"
+                style={{ width: 160 }}
+                options={[
+                  { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+                  { value: 'claude-sonnet-4-6', label: 'Claude Sonnet' },
+                  { value: 'gpt-4o', label: 'ChatGPT GPT-4o' },
+                ]}
+              />
+            </div>
+            <div style={{ height: 280, overflowY: 'auto', border: '1px solid rgba(0,0,0,0.12)', borderRadius: 8, padding: 12, marginBottom: 8, background: '#fafafa' }}>
+              {chatMessages.map((msg, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
+                  <div style={{
+                    maxWidth: '80%', padding: '8px 12px', borderRadius: 12,
+                    background: msg.role === 'user' ? '#0071e3' : '#ffffff',
+                    color: msg.role === 'user' ? '#fff' : '#1d1d1f',
+                    border: msg.role === 'user' ? 'none' : '1px solid rgba(0,0,0,0.08)',
+                    fontSize: 13, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                  }}>
+                    {msg.content || (chatStreaming && i === chatMessages.length - 1 ? '▋' : '')}
+                  </div>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onPressEnter={handleChatSend}
+                placeholder="输入问题，按 Enter 发送..."
+                disabled={chatStreaming}
+              />
+              <Button type="primary" onClick={handleChatSend} loading={chatStreaming}>发送</Button>
+            </div>
+          </div>
+        )}
       </Col>
     </Row>
   )
