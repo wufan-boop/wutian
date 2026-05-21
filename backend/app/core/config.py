@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
-    anthropic_api_key: str
+    gemini_api_key: str
     jwt_secret: str
     jwt_expire_hours: int = 8
     database_url: str = "sqlite:///./data/amazon_assistant.db"
@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     sorftime_mcp_api_key: str = ""
     maijia_mcp_url: str = ""
     maijia_mcp_api_key: str = ""
+    anthropic_api_key: str = ""
+    openai_api_key: str = ""
 
     @property
     def cors_origins_list(self) -> List[str]:
