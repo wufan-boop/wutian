@@ -44,6 +44,7 @@
 |---|---|---|
 | `gemini-2.5-flash` | Gemini 2.5 Flash | google-genai（已有） |
 | `claude-sonnet-4-6` | Claude Sonnet 4.6 | anthropic（需安装） |
+| `gpt-4o` | ChatGPT GPT-4o | openai（需安装） |
 
 模型选择器：小 Select 组件，默认 Gemini 2.5 Flash，放在对话框右上角。
 
@@ -89,11 +90,13 @@ data: {"done": true}
 在 `backend/app/core/config.py` 新增：
 ```python
 anthropic_api_key: str = ""
+openai_api_key: str = ""
 ```
 
 在 `backend/.env` 新增：
 ```
 ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
 ```
 
 ---
@@ -142,4 +145,4 @@ Amazon 选品调研报告
 
 - 对话历史持久化到数据库
 - Listing 生成页面也加对话框
-- 更多模型（GPT-4o 等）
+- 更多模型（Llama、Deepseek 等本地部署模型）
