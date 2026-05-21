@@ -266,6 +266,7 @@ function ProductResearchTab() {
                   { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
                   { value: 'claude-sonnet-4-6', label: 'Claude Sonnet' },
                   { value: 'gpt-4o', label: 'ChatGPT GPT-4o' },
+                  { value: 'deepseek-chat', label: 'DeepSeek Chat' },
                 ]}
               />
             </div>

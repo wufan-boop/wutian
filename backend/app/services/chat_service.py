@@ -62,6 +62,20 @@ async def _chat_openai(messages: list[dict], system_prompt: str) -> AsyncGenerat
             yield text
 
 
+async def _chat_deepseek(messages: list[dict], system_prompt: str) -> AsyncGenerator[str, None]:
+    client = AsyncOpenAI(api_key=settings.deepseek_api_key, base_url="https://api.deepseek.com")
+    stream = await client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[{"role": "system", "content": system_prompt}]
+        + [{"role": m["role"], "content": m["content"]} for m in messages],
+        stream=True,
+    )
+    async for chunk in stream:
+        text = chunk.choices[0].delta.content or ""
+        if text:
+            yield text
+
+
 async def chat_stream(
     messages: list[dict],
     context: str,
@@ -73,6 +87,9 @@ async def chat_stream(
             yield text
     elif model == "gpt-4o":
         async for text in _chat_openai(messages, system_prompt):
+            yield text
+    elif model == "deepseek-chat":
+        async for text in _chat_deepseek(messages, system_prompt):
             yield text
     else:
         async for text in _chat_gemini(messages, system_prompt):

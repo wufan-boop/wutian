@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     maijia_mcp_api_key: str = ""
     anthropic_api_key: str = ""
     openai_api_key: str = ""
+    deepseek_api_key: str = ""
 
     @property
     def cors_origins_list(self) -> List[str]:
