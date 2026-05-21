@@ -22,6 +22,7 @@ class ProductRequest(BaseModel):
     selling_price: Optional[float] = None
     fba_fee: Optional[float] = None
     cogs: Optional[float] = None
+    site: str = "US"
 
 
 class HistoryItem(BaseModel):
@@ -51,9 +52,13 @@ async def research_product(
     collected: List[str] = []
 
     async def event_stream():
-        async for chunk in product_service.research_product_stream(body.model_dump()):
-            collected.append(chunk)
-            yield f"data: {json.dumps({'text': chunk}, ensure_ascii=False)}\n\n"
+        async for event in product_service.research_product_stream(body.model_dump()):
+            if event.get("type") == "text":
+                content = event["content"]
+                collected.append(content)
+                yield f"data: {json.dumps({'text': content}, ensure_ascii=False)}\n\n"
+            elif event.get("type") == "status":
+                yield f"data: {json.dumps({'status': event['content']}, ensure_ascii=False)}\n\n"
 
         full_text = "".join(collected)
         margin = _calc_margin(body.selling_price, body.fba_fee, body.cogs)

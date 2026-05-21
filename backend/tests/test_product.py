@@ -2,9 +2,10 @@ from unittest.mock import patch
 
 
 async def fake_product_stream(data):
+    yield {"type": "status", "content": "正在获取市场数据..."}
     payload = '{"market_overview":{"size":"10亿","competition":"中","avg_price":29.99},"competitors":[],"analysis":{"opportunities":["机会"],"risks":["风险"],"recommendation":"建议进入"}}'
     for ch in payload:
-        yield ch
+        yield {"type": "text", "content": ch}
 
 
 def test_product_research_streams(client, auth_headers):
