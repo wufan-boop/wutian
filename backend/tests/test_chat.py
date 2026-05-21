@@ -19,6 +19,8 @@ def test_chat_message(client, auth_headers):
         )
     assert resp.status_code == 200
     assert "text/event-stream" in resp.headers["content-type"]
+    assert '"text":' in resp.text
+    assert 'data: {"done": true}' in resp.text
 
 
 def test_chat_requires_auth(client):
