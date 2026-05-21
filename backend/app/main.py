@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import auth, listing, product
+from .api import auth, chat, listing, product
 from .core.database import Base, engine
 
 Base.metadata.create_all(bind=engine)
@@ -19,5 +19,6 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(chat.router)
 app.include_router(listing.router)
 app.include_router(product.router)
