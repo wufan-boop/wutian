@@ -16,14 +16,42 @@ from ..services import product_service
 router = APIRouter(prefix="/api/product", tags=["product"])
 
 
+# ─── 请求模型 ─────────────────────────────────────────────────────────────────
+
 class ProductRequest(BaseModel):
+    # 选品模式：validate/compare/keyword/batch/potential
+    mode: str = "keyword"
+
+    # 通用字段
+    site: str = "US"
     keyword: Optional[str] = None
     category: Optional[str] = None
     dimensions: Optional[List[str]] = None
+
+    # 验证产品 / 候选对比模式
+    asin: Optional[str] = None          # 单个ASIN（验证模式）
+    asins: Optional[List[str]] = None   # 多个ASIN（对比模式，最多3个）
+
+    # 成本计算（保留原有字段）
     selling_price: Optional[float] = None
     fba_fee: Optional[float] = None
     cogs: Optional[float] = None
-    site: str = "US"
+
+    # 筛选条件（可选）
+    price_min: Optional[float] = None
+    price_max: Optional[float] = None
+    month_sales_min: Optional[int] = None
+    weight_max_lb: Optional[float] = None
+    budget_cny: Optional[int] = None            # 首批备货预算（万RMB）
+    team_size: Optional[str] = None             # 1人 / 3-5人 / 10+
+    supply_chain: Optional[str] = None          # 供应链优势描述
+    exclude_categories: Optional[List[str]] = None
+    exclude_certification: Optional[bool] = False
+    exclude_seasonal: Optional[bool] = False
+    enable_longtail: Optional[bool] = False     # 启用长尾蓝海扩展
+
+    # AI模型选择
+    ai_model: Optional[str] = None  # 默认None = 自动选择
 
 
 class HistoryItem(BaseModel):
@@ -37,12 +65,16 @@ class HistoryItem(BaseModel):
     created_at: str
 
 
+# ─── 工具函数 ─────────────────────────────────────────────────────────────────
+
 def _calc_margin(selling_price, fba_fee, cogs) -> Optional[float]:
     if selling_price is not None and selling_price > 0:
         profit = selling_price - (fba_fee or 0) - (cogs or 0)
         return round(profit / selling_price * 100, 2)
     return None
 
+
+# ─── 接口 ─────────────────────────────────────────────────────────────────────
 
 @router.post("/research")
 async def research_product(
@@ -56,20 +88,35 @@ async def research_product(
     collected: List[str] = []
 
     async def event_stream():
-        async for event in product_service.research_product_stream(body.model_dump(), system_instruction):
+        async for event in product_service.research_product_stream(
+            body.model_dump(),
+            system_instruction,
+            ai_model=body.ai_model,
+        ):
             if event.get("type") == "text":
                 content = event["content"]
                 collected.append(content)
                 yield f"data: {json.dumps({'text': content}, ensure_ascii=False)}\n\n"
             elif event.get("type") == "status":
                 yield f"data: {json.dumps({'status': event['content']}, ensure_ascii=False)}\n\n"
+            elif event.get("type") == "error":
+                yield f"data: {json.dumps({'error': event['content']}, ensure_ascii=False)}\n\n"
 
         full_text = "".join(collected)
         margin = _calc_margin(body.selling_price, body.fba_fee, body.cogs)
+
+        # 保存历史记录
+        keyword_label = (
+            body.keyword or
+            body.category or
+            (body.asin if body.asin else None) or
+            (", ".join(body.asins) if body.asins else None) or
+            ""
+        )
         try:
             record = ProductHistory(
                 user_id=current_user.id,
-                keyword=body.keyword or body.category or "",
+                keyword=keyword_label,
                 input_json=body.model_dump_json(),
                 result_json=full_text,
                 selling_price=body.selling_price,
