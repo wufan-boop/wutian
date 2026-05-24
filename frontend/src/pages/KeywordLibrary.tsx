@@ -581,23 +581,51 @@ export default function KeywordLibrary() {
           </Card>
 
           {/* 底部导航 */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-            <Button
-              type="primary"
-              size="large"
-              onClick={() => {
-                // 跳转到Listing全案，带入关键词数据
-                const mainKeywords = project.keywords
-                  .filter(k => k.quadrant === 'main' || k.quadrant === 'redsea')
-                  .slice(0, 5)
-                  .map(k => k.keyword)
-                  .join(', ')
-                localStorage.setItem('keyword_library_result', mainKeywords)
-                window.location.href = '/listing'
-              }}
-            >
-              下一步：Listing 全案 →
-            </Button>
+          {/* 继续工作流 */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f0f4ff 0%, #fff7f0 100%)',
+            border: '1px solid #e0e7ff',
+            borderRadius: 12,
+            padding: '14px 20px',
+            marginTop: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+              🔗 继续工作流：本关键词库会自动关联到下一步模块（同产品 ID），AI 直接用这里的 8 维分类选词 / 搭建广告架构
+            </Typography.Text>
+            <Space>
+              <Button
+                type="primary"
+                size="middle"
+                style={{ background: '#0071e3', borderColor: '#0071e3' }}
+                onClick={() => {
+                  const mainKeywords = project.keywords
+                    .filter(k => k.quadrant === 'main' || k.quadrant === 'redsea')
+                    .slice(0, 5)
+                    .map(k => k.keyword)
+                    .join(', ')
+                  localStorage.setItem('keyword_library_result', mainKeywords)
+                  window.location.href = '/listing'
+                }}
+              >
+                🚀 → Listing 文案
+              </Button>
+              <Button
+                size="middle"
+                style={{ background: '#ff6b35', borderColor: '#ff6b35', color: '#fff' }}
+                onClick={() => {
+                  const allKeywords = project.keywords
+                    .map(k => k.keyword)
+                    .join(', ')
+                  localStorage.setItem('keyword_library_result', allKeywords)
+                  window.location.href = '/listing'
+                }}
+              >
+                🎯 → 上架策略（含广告架构）
+              </Button>
+            </Space>
           </div>
         </>
       )}
