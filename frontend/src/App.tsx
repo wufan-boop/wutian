@@ -30,6 +30,7 @@ import ProductResearch from './pages/ProductResearch'
 import KeywordLibrary from './pages/KeywordLibrary'
 import UserManagement from './pages/UserManagement'
 import VOCAnalysis from './pages/VOCAnalysis'
+import ListingCreator from './pages/ListingCreator'
 
 const { Header, Content } = Layout
 const { TextArea } = Input
@@ -273,7 +274,7 @@ function AppShell() {
           <Route path="/users" element={<UserManagement />} />
               <Route path="/voc" element={<VOCAnalysis />} />
               <Route path="/keywords" element={<Card><KeywordLibrary /></Card>} />
-          <Route path="/listing" element={<ListingPage />} />
+          <Route path="/listing" element={<ListingCreator />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<ProductPage />} />
         </Routes>
