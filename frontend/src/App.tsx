@@ -29,6 +29,7 @@ import { useAuthStore } from './store/auth'
 import ProductResearch from './pages/ProductResearch'
 import KeywordLibrary from './pages/KeywordLibrary'
 import UserManagement from './pages/UserManagement'
+import VOCAnalysis from './pages/VOCAnalysis'
 
 const { Header, Content } = Layout
 const { TextArea } = Input
@@ -256,6 +257,7 @@ function AppShell() {
           items={[
             { key: '/product', icon: <SearchOutlined />, label: '商品调研' },
             { key: '/keywords', icon: <UnorderedListOutlined />, label: '关键词库' },
+            { key: '/voc', icon: <SearchOutlined />, label: 'VOC分析' },
             { key: '/listing', icon: <UnorderedListOutlined />, label: 'Listing 生成' },
             ...(user?.role === 'admin' ? [{ key: '/settings', icon: <SettingOutlined />, label: '提示词设置' }, { key: '/users', icon: <TeamOutlined />, label: '用户管理' }] : []),
           ]}
@@ -269,6 +271,7 @@ function AppShell() {
         <Routes>
           <Route path="/product" element={<ProductPage />} />
           <Route path="/users" element={<UserManagement />} />
+              <Route path="/voc" element={<VOCAnalysis />} />
               <Route path="/keywords" element={<Card><KeywordLibrary /></Card>} />
           <Route path="/listing" element={<ListingPage />} />
           <Route path="/settings" element={<SettingsPage />} />
