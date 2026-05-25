@@ -193,6 +193,7 @@ const KB_CATEGORIES = [
   { key: 'listing_rules', label: 'Listing规范' },
   { key: 'ad_rules', label: '广告规则' },
   { key: 'policy_updates', label: '新政速递' },
+  { key: 'ops', label: '运维手册' },
 ]
 
 interface KBItem { id: number; category: string; title: string; content: string; updated_at: string }
