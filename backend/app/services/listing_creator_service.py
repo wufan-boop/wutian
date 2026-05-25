@@ -295,12 +295,20 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
             return resp.json()["choices"][0]["message"]["content"]
 
     async def call_gemini():
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={settings.gemini_api_key}"
-        payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 4096}}
-        async with httpx.AsyncClient(timeout=120) as client:
-            resp = await client.post(url, json=payload)
-            resp.raise_for_status()
-            return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        keys = [k for k in [settings.gemini_api_key, settings.gemini_api_key_2] if k]
+        last_err = None
+        for key in keys:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={key}"
+                payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 4096}}
+                async with httpx.AsyncClient(timeout=120) as client:
+                    resp = await client.post(url, json=payload)
+                    resp.raise_for_status()
+                    return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+            except Exception as e:
+                last_err = e
+                logger.warning("Gemini key失败，尝试下一个: %s", e)
+        raise last_err
 
     async def call_claude():
         url = "https://api.anthropic.com/v1/messages"

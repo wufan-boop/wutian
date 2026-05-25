@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     gemini_api_key: str
+    gemini_api_key_2: str = ""
     jwt_secret: str
     jwt_expire_hours: int = 8
     database_url: str = "sqlite:///./data/amazon_assistant.db"
