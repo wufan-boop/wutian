@@ -5,6 +5,7 @@ from typing import AsyncIterator, List, Optional
 
 from ..core.config import settings
 from .sorftime_client import call_sorftime_tool
+from .kb_utils import get_policy_context
 from .listing_creator_service import _call_ai_json
 
 logger = logging.getLogger(__name__)
@@ -90,7 +91,14 @@ def _build_diagnose_prompt(title: str, bullets: str, comp_details: list, site: s
                 comp_bullets = "\n".join(comp_bullets[:3])
             comp_str += f"\n竞品{i+1}标题：{comp_title}\n竞品{i+1}五点（前3条）：{comp_bullets}\n"
 
+    policy_context = get_policy_context(["compliance", "listing_rules"])
+    policy_section = f"""
+政策合规要求（用于合规检查维度）：
+{policy_context}
+""" if policy_context else ""
+
     return f"""你是亚马逊Listing诊断专家，专注{site}市场AI搜索时代的文案优化。
+{policy_section}
 
 现有Listing：
 标题：{title}
@@ -140,7 +148,14 @@ def _build_optimize_prompt(title: str, bullets: str, comp_details: list, site: s
             comp_title = comp.get("title", "")
             comp_str += f"竞品{i+1}标题：{comp_title}\n"
 
+    policy_context = get_policy_context(["compliance", "listing_rules"])
+    policy_section = f"""
+政策合规要求（改写时必须严格遵守）：
+{policy_context}
+""" if policy_context else ""
+
     return f"""你是亚马逊Listing文案专家，专注{site}市场。将以下现有Listing改写为符合AI搜索时代标准的版本。
+{policy_section}
 
 改写原则：
 1. 标题前80字符必须包含最核心关键词+最大卖点

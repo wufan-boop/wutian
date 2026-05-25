@@ -5,6 +5,7 @@ from typing import AsyncIterator, Dict, List, Optional
 
 from ..core.config import settings
 from .sorftime_client import call_sorftime_tool
+from .kb_utils import get_policy_context
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,7 @@ def _build_analysis_prompt(
 
     return f"""你是亚马逊Listing优化专家。基于以下产品信息和市场数据，生成深度分析报告。
 
+{policy_section}
 产品名称：{product_name}
 产品描述：{product_description}
 差异化卖点：{differentiation}
@@ -208,6 +210,12 @@ VOC洞察：
 流量关键词：{', '.join(market.get('keywords', []))}
 """
 
+    policy_context = get_policy_context(["compliance", "listing_rules"])
+    policy_section = f"""
+政策合规要求（必须严格遵守）：
+{policy_context}
+""" if policy_context else ""
+
     return f"""你是亚马逊Listing文案专家，专注{site}市场。基于以下信息生成高转化率的英文Listing文案。
 
 产品信息：
@@ -224,6 +232,7 @@ VOC洞察：
 2. 五点：每点150-200字符，用大写关键词开头，突出卖点同时回应差评痛点
 3. 描述：800-1500字符，讲故事，强化使用场景和情感价值
 4. Search Terms：250字符以内，不重复标题和五点已有关键词
+5. 合规自检：生成完成后检查是否违反上方政策要求，有违规词立即替换
 
 请严格返回以下JSON格式：
 
