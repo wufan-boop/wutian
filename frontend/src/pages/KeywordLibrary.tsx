@@ -392,7 +392,9 @@ export default function KeywordLibrary() {
                 <Form.Item name="ai_model" label="AI分类模型" initialValue="deepseek">
                   <Select options={[
                     { value: 'deepseek', label: 'DeepSeek V4（推荐·省成本）' },
-                    { value: 'claude', label: 'Claude Haiku（更精准）' },
+                    { value: 'gemini', label: 'Gemini 2.5 Flash（快速）' },
+                    { value: 'claude', label: 'Claude Sonnet 4.6（深度分析）' },
+                    { value: 'gpt4o', label: 'GPT-4o（待充值）' },
                   ]} />
                 </Form.Item>
               </Card>

@@ -52,11 +52,10 @@ interface VOCReport {
 const STEPS = ['1. 输入', '2. 评论采集&分析', '3. VOC报告', '4. 导出']
 
 const AI_MODELS = [
-  { value: 'gemini', label: 'Gemini 2.5 Flash（默认·快速）' },
-  { value: 'deepseek', label: 'DeepSeek V4（经济实惠）' },
+  { value: 'deepseek', label: 'DeepSeek V4（推荐·省成本）' },
+  { value: 'gemini', label: 'Gemini 2.5 Flash（快速）' },
   { value: 'claude', label: 'Claude Sonnet 4.6（深度分析）' },
-  { value: 'gpt4o', label: 'GPT-4o（OpenAI）' },
-  { value: 'gpt4o_mini', label: 'GPT-4o Mini（OpenAI·快速）' },
+  { value: 'gpt4o', label: 'GPT-4o（待充值）' },
 ]
 
 export default function VOCAnalysis() {

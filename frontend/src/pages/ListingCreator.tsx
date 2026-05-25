@@ -28,11 +28,10 @@ const { TextArea } = Input
 const STEPS = ['1. 产品输入', '2. 数据分析', '3. 文案生成', '4. 图片策略', '5. 导出']
 
 const AI_MODELS = [
-  { value: 'gemini', label: 'Gemini 2.5 Flash（默认·快速）' },
-  { value: 'deepseek', label: 'DeepSeek V4（经济实惠）' },
+  { value: 'deepseek', label: 'DeepSeek V4（推荐·省成本）' },
+  { value: 'gemini', label: 'Gemini 2.5 Flash（快速）' },
   { value: 'claude', label: 'Claude Sonnet 4.6（深度分析）' },
-  { value: 'gpt4o', label: 'GPT-4o（OpenAI）' },
-  { value: 'gpt4o_mini', label: 'GPT-4o Mini（OpenAI·快速）' },
+  { value: 'gpt4o', label: 'GPT-4o（待充值）' },
 ]
 
 interface ListingInput {

@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import auth, users, chat, listing, product, prompts, keyword, voc, listing_creator
+from .api import auth, users, chat, listing, product, prompts, keyword, voc, listing_creator, knowledge, listing_optimizer
 from .core.database import Base, engine
 from .models import prompt  # noqa: F401 — ensure table is created
+from .api.knowledge import KnowledgeItem  # noqa: F401 — ensure table is created
 
 Base.metadata.create_all(bind=engine)
 
@@ -31,3 +32,5 @@ app.include_router(listing.router)
 app.include_router(product.router)
 app.include_router(prompts.router)
 app.include_router(keyword.router)
+app.include_router(knowledge.router)
+app.include_router(listing_optimizer.router)

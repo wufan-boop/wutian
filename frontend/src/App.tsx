@@ -1,4 +1,5 @@
 import {
+  BookOutlined,
   LogoutOutlined,
   SearchOutlined,
   SettingOutlined,
@@ -31,6 +32,7 @@ import KeywordLibrary from './pages/KeywordLibrary'
 import UserManagement from './pages/UserManagement'
 import VOCAnalysis from './pages/VOCAnalysis'
 import ListingCreator from './pages/ListingCreator'
+import ListingOptimizer from './pages/ListingOptimizer'
 
 const { Header, Content } = Layout
 const { TextArea } = Input
@@ -183,6 +185,122 @@ function ListingPage() {
   )
 }
 
+
+// ─── Knowledge Base ───────────────────────────────────────────────────────────
+
+const KB_CATEGORIES = [
+  { key: 'compliance', label: '合规红线' },
+  { key: 'listing_rules', label: 'Listing规范' },
+  { key: 'ad_rules', label: '广告规则' },
+  { key: 'policy_updates', label: '新政速递' },
+]
+
+interface KBItem { id: number; category: string; title: string; content: string; updated_at: string }
+
+function KnowledgeBasePage() {
+  const { message } = AntApp.useApp()
+  const [items, setItems] = useState<KBItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeCategory, setActiveCategory] = useState('compliance')
+  const [editingItem, setEditingItem] = useState<KBItem | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [form] = Form.useForm()
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => { loadItems() }, [])
+
+  async function loadItems() {
+    setLoading(true)
+    try {
+      const r = await client.get<KBItem[]>('/knowledge')
+      setItems(r.data)
+    } catch { message.error('加载失败') }
+    finally { setLoading(false) }
+  }
+
+  async function handleSave(values: Record<string, unknown>) {
+    setSaving(true)
+    try {
+      if (editingItem) {
+        await client.put(`/knowledge/${editingItem.id}`, values)
+      } else {
+        await client.post('/knowledge', { ...values, category: activeCategory })
+      }
+      message.success('保存成功')
+      setShowForm(false); setEditingItem(null); form.resetFields(); loadItems()
+    } catch { message.error('保存失败') }
+    finally { setSaving(false) }
+  }
+
+  async function handleDelete(id: number) {
+    try {
+      await client.delete(`/knowledge/${id}`)
+      message.success('已删除'); loadItems()
+    } catch { message.error('删除失败') }
+  }
+
+  function handleEdit(item: KBItem) {
+    setEditingItem(item); form.setFieldsValue(item); setShowForm(true)
+  }
+
+  const filtered = items.filter(i => i.category === activeCategory)
+
+  return (
+    <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+      <Card
+        title="政策知识库"
+        extra={<Button type="primary" size="small" onClick={() => { setEditingItem(null); form.resetFields(); setShowForm(true) }}>+ 新增条目</Button>}
+      >
+        <Tabs activeKey={activeCategory} onChange={setActiveCategory}
+          items={KB_CATEGORIES.map(c => ({
+            key: c.key, label: c.label,
+            children: (
+              <div>
+                {showForm && (
+                  <Card size="small" style={{ marginBottom: 16, background: '#f8f8f8' }}>
+                    <Form form={form} layout="vertical" onFinish={handleSave}>
+                      <Form.Item name="title" label="标题" rules={[{ required: true, message: '请输入标题' }]}>
+                        <Input placeholder="例如：标题禁用词清单 2025" />
+                      </Form.Item>
+                      <Form.Item name="content" label="内容" rules={[{ required: true, message: '请输入内容' }]}>
+                        <TextArea rows={6} placeholder="详细描述规则内容、违规案例、处理建议等" />
+                      </Form.Item>
+                      <Form.Item style={{ marginBottom: 0 }}>
+                        <Button type="primary" htmlType="submit" loading={saving} style={{ marginRight: 8 }}>保存</Button>
+                        <Button onClick={() => { setShowForm(false); setEditingItem(null) }}>取消</Button>
+                      </Form.Item>
+                    </Form>
+                  </Card>
+                )}
+                {loading ? <Spin /> : filtered.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>暂无内容，点击右上角新增</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {filtered.map(item => (
+                      <Card key={item.id} size="small"
+                        extra={<div>
+                          <Button type="link" size="small" onClick={() => handleEdit(item)}>编辑</Button>
+                          <Button type="link" size="small" danger onClick={() => handleDelete(item.id)}>删除</Button>
+                        </div>}
+                      >
+                        <Typography.Text strong style={{ display: 'block', marginBottom: 6 }}>{item.title}</Typography.Text>
+                        <Typography.Text style={{ whiteSpace: 'pre-wrap', fontSize: 13, color: '#444' }}>{item.content}</Typography.Text>
+                        <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+                          更新：{new Date(item.updated_at).toLocaleString()}
+                        </Typography.Text>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          }))}
+        />
+      </Card>
+    </div>
+  )
+}
+
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
 interface PromptItem { name: string; content: string }
@@ -214,6 +332,7 @@ function SettingsPage() {
 
   const LABELS: Record<string, string> = {
     product_research: '选品调研提示词',
+    voc_analysis: 'VOC分析提示词',
     listing: 'Listing 生成提示词',
   }
 
@@ -260,7 +379,8 @@ function AppShell() {
             { key: '/keywords', icon: <UnorderedListOutlined />, label: '关键词库' },
             { key: '/voc', icon: <SearchOutlined />, label: 'VOC分析' },
             { key: '/listing', icon: <UnorderedListOutlined />, label: 'Listing 生成' },
-            ...(user?.role === 'admin' ? [{ key: '/settings', icon: <SettingOutlined />, label: '提示词设置' }, { key: '/users', icon: <TeamOutlined />, label: '用户管理' }] : []),
+            { key: '/optimizer', icon: <UnorderedListOutlined />, label: '文案优化' },
+            ...(user?.role === 'admin' ? [{ key: '/knowledge', icon: <BookOutlined />, label: '政策知识库' }, { key: '/settings', icon: <SettingOutlined />, label: '提示词设置' }, { key: '/users', icon: <TeamOutlined />, label: '用户管理' }] : []),
           ]}
           onClick={({ key }) => navigate(key)}
           style={{ flex: 1, border: 'none', background: 'transparent', lineHeight: '46px' }}
@@ -275,6 +395,8 @@ function AppShell() {
               <Route path="/voc" element={<VOCAnalysis />} />
               <Route path="/keywords" element={<Card><KeywordLibrary /></Card>} />
           <Route path="/listing" element={<ListingCreator />} />
+          <Route path="/optimizer" element={<ListingOptimizer />} />
+          <Route path="/knowledge" element={<KnowledgeBasePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<ProductPage />} />
         </Routes>

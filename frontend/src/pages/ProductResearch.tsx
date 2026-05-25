@@ -382,8 +382,10 @@ function Step1ModeSelect({
             <Col span={8}>
               <Form.Item name="ai_model" label="AI 分析模型" initialValue="gemini">
                 <Select options={[
-                  { value: 'gemini', label: 'Gemini 2.5 Flash（默认·快速）' },
-                  { value: 'deepseek-chat', label: 'DeepSeek V4（经济实惠）' },
+                  { value: 'deepseek', label: 'DeepSeek V4（推荐·省成本）' },
+                  { value: 'gemini', label: 'Gemini 2.5 Flash（快速）' },
+                  { value: 'claude', label: 'Claude Sonnet 4.6（深度分析）' },
+                  { value: 'gpt4o', label: 'GPT-4o（待充值）' },
                   { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6（深度分析）' },
                   { value: 'gpt-4o', label: 'GPT-4o（OpenAI）' },
                   { value: 'gpt-4o-mini', label: 'GPT-4o Mini（OpenAI·快速）' },
