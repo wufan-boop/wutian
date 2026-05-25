@@ -386,9 +386,6 @@ function Step1ModeSelect({
                   { value: 'gemini', label: 'Gemini 2.5 Flash（快速）' },
                   { value: 'claude', label: 'Claude Sonnet 4.6（深度分析）' },
                   { value: 'gpt4o', label: 'GPT-4o（待充值）' },
-                  { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6（深度分析）' },
-                  { value: 'gpt-4o', label: 'GPT-4o（OpenAI）' },
-                  { value: 'gpt-4o-mini', label: 'GPT-4o Mini（OpenAI·快速）' },
                 ]} />
               </Form.Item>
             </Col>
@@ -650,11 +647,10 @@ function AiChat({ context }: { context: string }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography.Text strong style={{ fontSize: 13 }}>AI 追问</Typography.Text>
         <Select value={model} onChange={setModel} size="small" style={{ width: 180 }} options={[
-          { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-          { value: 'claude-sonnet-4-6', label: 'Claude Sonnet' },
-          { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-          { value: 'gpt-4o', label: 'GPT-4o' },
-          { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+          { value: 'deepseek', label: 'DeepSeek V4（推荐·省成本）' },
+          { value: 'gemini', label: 'Gemini 2.5 Flash（快速）' },
+          { value: 'claude', label: 'Claude Sonnet 4.6（深度分析）' },
+          { value: 'gpt4o', label: 'GPT-4o（待充值）' },
         ]} />
       </div>
     }>
