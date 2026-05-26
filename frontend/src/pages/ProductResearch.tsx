@@ -233,9 +233,6 @@ function Step1ModeSelect({
                 </Typography.Text>
               </Col>
             )}
-                </Row>
-              </Col>
-            )}
 
             {selectedMode === 'batch' && (
               <Col span={16}>
