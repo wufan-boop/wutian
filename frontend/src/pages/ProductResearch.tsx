@@ -1001,7 +1001,7 @@ export default function ProductResearch() {
 
       {/* 底部导航 */}
       {currentStep > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 24, position: 'sticky', bottom: 16, background: '#f5f5f7', padding: '12px 0', zIndex: 10 }}>
           <Button size="large" onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}>
             ← 上一步
           </Button>
