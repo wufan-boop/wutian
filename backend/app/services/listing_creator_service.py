@@ -305,7 +305,7 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
         last_err = None
         for key in keys:
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={key}"
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
                 payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 4096}}
                 async with httpx.AsyncClient(timeout=120) as client:
                     resp = await client.post(url, json=payload)
