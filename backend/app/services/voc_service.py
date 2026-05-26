@@ -304,11 +304,16 @@ async def _call_claude(prompt: str) -> Dict:
         "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
     }
-    async with httpx.AsyncClient(timeout=120) as client:
+    async with httpx.AsyncClient(timeout=180) as client:
         resp = await client.post(url, json=payload, headers=headers)
         resp.raise_for_status()
         data = resp.json()
+        logger.info("Claude response stop_reason: %s", data.get("stop_reason"))
+        logger.info("Claude usage: %s", data.get("usage"))
         text = data["content"][0]["text"]
+        logger.info("Claude response text length: %d", len(text))
+        logger.info("Claude response first 500 chars: %s", text[:500])
+        logger.info("Claude response last 200 chars: %s", text[-200:])
         return _parse_json_response(text)
 
 
