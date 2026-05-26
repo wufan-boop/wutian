@@ -318,7 +318,7 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
 
     async def call_claude():
         url = "https://api.anthropic.com/v1/messages"
-        payload = {"model": "claude-sonnet-4-5", "max_tokens": 4096, "messages": [{"role": "user", "content": prompt}]}
+        payload = {"model": "claude-sonnet-4-6", "max_tokens": 4096, "messages": [{"role": "user", "content": prompt}]}
         headers = {"x-api-key": settings.anthropic_api_key, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}
         async with httpx.AsyncClient(timeout=120) as client:
             resp = await client.post(url, json=payload, headers=headers)
