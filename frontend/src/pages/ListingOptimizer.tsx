@@ -51,11 +51,7 @@ export default function ListingOptimizer() {
       const res = await fetch('/api/listing-optimizer/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        // competitor_asins字符串转数组
-        const competitorAsins = values.competitor_asins
-          ? values.competitor_asins.split(',').map((s: string) => s.trim()).filter(Boolean)
-          : []
-        body: JSON.stringify({ ...values, competitor_asins: competitorAsins, ai_model: aiModel, mode }),
+        body: JSON.stringify({ ...values, competitor_asins: values.competitor_asins ? values.competitor_asins.split(',').map((s: string) => s.trim()).filter(Boolean) : [], ai_model: aiModel, mode }),
       })
       const reader = res.body!.getReader()
       const dec = new TextDecoder()
