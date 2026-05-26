@@ -94,14 +94,6 @@ const MODES = [
     tip: '适合：看到一个产品想跟进',
   },
   {
-    key: 'compare',
-    icon: '⚖️',
-    title: '候选对比',
-    subtitle: '2-3个 ASIN',
-    desc: '横向对比多个候选，输出明确推荐结论',
-    tip: '适合：有几个候选要对比决策',
-  },
-  {
     key: 'batch',
     icon: '⚡',
     title: '批量初筛',
@@ -241,21 +233,6 @@ function Step1ModeSelect({
                 </Typography.Text>
               </Col>
             )}
-
-            {selectedMode === 'compare' && (
-              <Col span={16}>
-                <Row gutter={8}>
-                  {[0, 1, 2].map((i) => (
-                    <Col span={8} key={i}>
-                      <Form.Item
-                        name={['asins', i]}
-                        label={`ASIN ${i + 1}${i === 2 ? '（可选）' : ''}`}
-                        rules={i < 2 ? [{ required: true, message: '必填' }] : []}
-                      >
-                        <Input placeholder="B0XXXXXXXX" />
-                      </Form.Item>
-                    </Col>
-                  ))}
                 </Row>
               </Col>
             )}
