@@ -195,7 +195,7 @@ async def _fetch_batch_data(data: dict) -> Dict[str, Any]:
     api_key = settings.sorftime_mcp_api_key
     site = data.get("site", "US")
 
-    params = {"keywordSupportSite": site}
+    params = {"amzSite": site}
     if data.get("price_min"):
         params["price_min"] = data["price_min"]
     if data.get("price_max"):
@@ -215,7 +215,7 @@ async def _fetch_potential_data(data: dict) -> Dict[str, Any]:
     api_key = settings.sorftime_mcp_api_key
     site = data.get("site", "US")
 
-    params: Dict[str, Any] = {"keywordSupportSite": site}
+    params: Dict[str, Any] = {"amzSite": site}
     if data.get("price_min"):
         params["price_min"] = data["price_min"]
     if data.get("price_max"):
@@ -297,7 +297,7 @@ def _build_prompt(data: dict, market_data: Dict[str, Any]) -> str:
     if data.get("asins"):
         lines.append(f"对比ASIN列表：{', '.join(data['asins'])}")
     lines.append(f"目标站点：{site}")
-    lines.append(f"当前分析日期：{datetime.now().strftime("%Y年%m月%d日")}")
+    lines.append("当前分析日期：" + datetime.now().strftime("%Y年%m月%d日"))
 
     # 筛选条件
     filters = []

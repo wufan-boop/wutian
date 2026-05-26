@@ -876,6 +876,7 @@ export default function ProductResearch() {
       values.asins = Object.values(values.asins).filter(Boolean) as string[]
     }
     const payload = { ...values, mode: selectedMode }
+    console.log("DEBUG payload:", JSON.stringify(payload))
 
     try {
       const res = await fetch('/api/product/research', {
