@@ -82,6 +82,12 @@ def _build_analysis_prompt(
     product_detail, keyword_data, comp_details, voc_data, site
 ) -> str:
 
+    policy_context = get_policy_context(["compliance", "listing_rules"])
+    policy_section = f"""
+政策合规要求（必须严格遵守）：
+{policy_context}
+""" if policy_context else ""
+
     detail_str = ""
     if isinstance(product_detail, dict) and product_detail:
         detail_str = f"产品数据：{json.dumps(product_detail, ensure_ascii=False)[:1000]}"
