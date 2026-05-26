@@ -871,6 +871,10 @@ export default function ProductResearch() {
     setStreaming(true)
     abortRef.current = new AbortController()
 
+    // 把asins对象转成数组（Ant Design Form嵌套字段问题）
+    if (values.asins && !Array.isArray(values.asins)) {
+      values.asins = Object.values(values.asins).filter(Boolean) as string[]
+    }
     const payload = { ...values, mode: selectedMode }
 
     try {
