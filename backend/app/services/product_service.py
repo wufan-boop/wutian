@@ -442,7 +442,10 @@ async def _batch_filter_stream(data: dict) -> AsyncGenerator[Dict[str, Any], Non
         return
 
     results = market_data.get("batch_results", {})
-    items = results.get("data", results.get("list", []))
+    if isinstance(results, list):
+        items = results
+    else:
+        items = results.get("data", results.get("list", []))
 
     if not items:
         yield {"type": "text", "content": "未找到符合条件的产品，请调整筛选条件后重试。"}
