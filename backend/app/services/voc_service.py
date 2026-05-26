@@ -237,7 +237,8 @@ async def analyze_voc(
         report_json = await _call_ai(prompt, ai_model)
         yield sse("done", report=report_json)
     except Exception as e:
-        logger.error("AI analysis error: %s", e)
+        import traceback
+        logger.error("AI analysis error: %s\n%s", e, traceback.format_exc())
         yield sse("error", content=f"AI分析失败: {str(e)}")
 
 
