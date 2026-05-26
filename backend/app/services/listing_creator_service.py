@@ -33,7 +33,7 @@ async def analyze_listing_data(
     # 产品详情
     if asin:
         tasks.append(call_sorftime_tool("product_detail", {
-            "keywordSupportSite": site_domain, "productId": asin,
+            "amzSite": amz_site, "asin": asin,
         }, settings.sorftime_mcp_url, settings.sorftime_mcp_api_key, timeout=30.0))
     else:
         tasks.append(asyncio.sleep(0, result={}))
@@ -51,7 +51,7 @@ async def analyze_listing_data(
     comp_tasks = []
     for comp_asin in competitor_asins[:2]:
         comp_tasks.append(call_sorftime_tool("product_detail", {
-            "keywordSupportSite": site_domain, "productId": comp_asin,
+            "amzSite": amz_site, "asin": comp_asin,
         }, settings.sorftime_mcp_url, settings.sorftime_mcp_api_key, timeout=30.0))
 
     results = await asyncio.gather(*tasks, return_exceptions=True)

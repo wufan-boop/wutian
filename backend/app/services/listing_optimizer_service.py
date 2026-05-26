@@ -30,7 +30,7 @@ async def run_optimizer(
     tasks = []
     if asin:
         tasks.append(call_sorftime_tool("product_detail", {
-            "keywordSupportSite": site_domain, "productId": asin,
+            "amzSite": site, "asin": asin,
         }, settings.sorftime_mcp_url, settings.sorftime_mcp_api_key, timeout=30.0))
     else:
         tasks.append(asyncio.sleep(0, result={}))
@@ -38,7 +38,7 @@ async def run_optimizer(
     comp_tasks = []
     for comp in competitor_asins[:3]:
         comp_tasks.append(call_sorftime_tool("product_detail", {
-            "keywordSupportSite": site_domain, "productId": comp,
+            "amzSite": site, "asin": comp,
         }, settings.sorftime_mcp_url, settings.sorftime_mcp_api_key, timeout=30.0))
 
     results = await asyncio.gather(*tasks, return_exceptions=True)

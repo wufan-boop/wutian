@@ -122,7 +122,7 @@ async def _fetch_validate_data(data: dict) -> Dict[str, Any]:
         return {}
 
     tasks = [
-        call_sorftime_tool("product_detail", {"productId": asin, "keywordSupportSite": site}, mcp_url, api_key),
+        call_sorftime_tool("product_detail", {"asin": asin, "amzSite": site}, mcp_url, api_key),
         call_sorftime_tool("competitor_product_keywords", {"productId": asin, "keywordSupportSite": site}, mcp_url, api_key),
         call_sorftime_tool("product_reviews", {"asin": asin, "amzSite": "US", "reviewType": "Both"}, mcp_url, api_key),
     ]
@@ -149,7 +149,7 @@ async def _fetch_compare_data(data: dict) -> Dict[str, Any]:
     tasks = []
     keys = []
     for asin in asins[:3]:  # 最多3个
-        tasks.append(call_sorftime_tool("product_detail", {"productId": asin, "keywordSupportSite": site}, mcp_url, api_key))
+        tasks.append(call_sorftime_tool("product_detail", {"asin": asin, "amzSite": site}, mcp_url, api_key))
         keys.append(f"product_{asin}")
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
