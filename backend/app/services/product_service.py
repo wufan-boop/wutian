@@ -1,3 +1,4 @@
+from datetime import datetime
 import asyncio
 import json
 import logging
@@ -296,6 +297,7 @@ def _build_prompt(data: dict, market_data: Dict[str, Any]) -> str:
     if data.get("asins"):
         lines.append(f"对比ASIN列表：{', '.join(data['asins'])}")
     lines.append(f"目标站点：{site}")
+    lines.append(f"当前分析日期：{datetime.now().strftime("%Y年%m月%d日")}")
 
     # 筛选条件
     filters = []
