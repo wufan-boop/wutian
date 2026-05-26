@@ -50,11 +50,26 @@ async def run_optimizer(
 
     # 如果有ASIN但没手动输入文案，从product_detail提取
     if asin and isinstance(product_detail, dict) and product_detail:
-        if not existing_title:
-            existing_title = product_detail.get("title", "") or ""
-        if not existing_bullets:
-            bullets = product_detail.get("bullets", []) or product_detail.get("bullet_points", []) or []
-            existing_bullets = "\n".join(bullets) if isinstance(bullets, list) else str(bullets)
+        raw_text = product_detail.get("raw", "") if "raw" in product_detail else ""
+        if raw_text:
+            # 解析纯文本格式
+            import re
+            if not existing_title:
+                title_match = re.search(r'标题：(.+?)(?:\r?\n|$)', raw_text)
+                if title_match:
+                    existing_title = title_match.group(1).strip()
+            if not existing_bullets:
+                bullets_match = re.findall(r'五点描述\d*[：:](.+?)(?:\r?\n|$)', raw_text)
+                if bullets_match:
+                    existing_bullets = "\n".join(bullets_match)
+        else:
+            if not existing_title:
+                existing_title = product_detail.get("title", "") or ""
+            if not existing_bullets:
+                bullets = product_detail.get("bullets", []) or product_detail.get("bullet_points", []) or []
+                existing_bullets = "\n".join(bullets) if isinstance(bullets, list) else str(bullets)
+        logger.info("extracted title: %s", existing_title[:100])
+        logger.info("extracted bullets length: %d", len(existing_bullets))
 
     yield sse("status", content="数据采集完成，AI正在诊断...")
 
