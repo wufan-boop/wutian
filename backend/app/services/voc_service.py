@@ -295,7 +295,7 @@ async def _call_claude(prompt: str) -> Dict:
     url = "https://api.anthropic.com/v1/messages"
     payload = {
         "model": "claude-sonnet-4-6",
-        "max_tokens": 8192,
+        "max_tokens": 16000,
         "messages": [{"role": "user", "content": prompt}],
     }
     headers = {
