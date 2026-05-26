@@ -45,6 +45,7 @@ async def run_optimizer(
     comp_results = await asyncio.gather(*comp_tasks, return_exceptions=True) if comp_tasks else []
 
     product_detail = results[0] if not isinstance(results[0], Exception) else {}
+    logger.info("product_detail raw: %s", str(product_detail)[:500])
     comp_details = [r for r in comp_results if not isinstance(r, Exception)]
 
     # 如果有ASIN但没手动输入文案，从product_detail提取
