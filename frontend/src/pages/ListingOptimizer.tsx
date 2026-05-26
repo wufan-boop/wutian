@@ -328,67 +328,62 @@ export default function ListingOptimizer() {
   function renderStep3() {
     if (!diagnosis && !optimized) return <Alert message="请先完成诊断和优化" type="warning" showIcon />
 
+
     function exportWord() {
       if (!diagnosis && !optimized) return
-      const lines: string[] = []
-
+      const parts: string[] = []
       if (diagnosis?.ai_score) {
-        lines.push(`AI可读性评分：${diagnosis.ai_score.total}/100`)
-        lines.push(`AI摘要预测（优化前）：${diagnosis.ai_score.ai_summary_prediction}`)
-        lines.push(`总体评价：${diagnosis.ai_score.overall_comment}`)
-        lines.push('')
+        parts.push('AI可读性评分：' + diagnosis.ai_score.total + '/100')
+        parts.push('AI摘要预测：' + (diagnosis.ai_score.ai_summary_prediction || ''))
+        parts.push('')
       }
-      if (optimized) {
-        lines.push('=== 优化后标题 ===')
-        lines.push(`A版（功能导向）：${optimized.optimized_title?.a_version}`)
-        lines.push(`B版（场景导向）：${optimized.optimized_title?.b_version}`)
-        lines.push('')
-        lines.push('=== 改动说明 ===')
-        ;(optimized.optimized_title?.changes || []).forEach((c: string) => lines.push(`· ${c}`))
-        lines.push('')
-        lines.push('=== 优化后五点 ===')
-        ;(optimized.optimized_bullets || []).forEach((b: any, i: number) => {
-          lines.push(`Bullet ${i+1}：${b.optimized}`)
-          lines.push(`改动原因：${b.reason}`)
-          lines.push('')
+      if (optimized?.optimized_title) {
+        parts.push('=== 优化后标题 ===')
+        parts.push('A版：' + (optimized.optimized_title.a_version || ''))
+        parts.push('B版：' + (optimized.optimized_title.b_version || ''))
+        parts.push('')
+      }
+      if (optimized?.optimized_bullets) {
+        parts.push('=== 优化后五点 ===')
+        optimized.optimized_bullets.forEach((b: any, i: number) => {
+          parts.push('Bullet ' + (i+1) + '：' + b.optimized)
+          parts.push('改动原因：' + b.reason)
         })
-        lines.push(`优化后AI摘要：${optimized.ai_summary_after}`)
-        lines.push(`评分提升：${optimized.score_improvement}`)
-        if (optimized.search_terms) lines.push(`
-Search Terms：${optimized.search_terms}`)
+        parts.push('')
       }
-
-      const blob = new Blob([lines.join('
-')], { type: 'application/msword;charset=utf-8' })
+      if (optimized?.search_terms) {
+        parts.push('Search Terms：' + optimized.search_terms)
+      }
+      const blob = new Blob([parts.join('\n')], { type: 'application/msword;charset=utf-8' })
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a'); a.href = url; a.download = 'listing_optimization.doc'; a.click()
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'listing_optimization.doc'
+      a.click()
       URL.revokeObjectURL(url)
     }
 
     function exportExcel() {
       if (!diagnosis && !optimized) return
-      const rows: any[][] = [['类型', '原文', '优化后', '改动原因']]
-
+      const rows: string[][] = [['类型', '原文', '优化后', '改动原因']]
       if (optimized?.optimized_title) {
-        rows.push(['标题A版', '', optimized.optimized_title.a_version, (optimized.optimized_title.changes || []).join('; ')])
-        rows.push(['标题B版', '', optimized.optimized_title.b_version, ''])
+        rows.push(['标题A版', '', optimized.optimized_title.a_version || '', (optimized.optimized_title.changes || []).join('; ')])
+        rows.push(['标题B版', '', optimized.optimized_title.b_version || '', ''])
       }
-      ;(optimized?.optimized_bullets || []).forEach((b: any, i: number) => {
-        rows.push([`Bullet ${i+1}`, b.original || '', b.optimized, b.reason])
-      })
-      if (optimized?.search_terms) {
-        rows.push(['Search Terms', '', optimized.search_terms, ''])
+      if (optimized?.optimized_bullets) {
+        optimized.optimized_bullets.forEach((b: any, i: number) => {
+          rows.push(['Bullet ' + (i+1), b.original || '', b.optimized || '', b.reason || ''])
+        })
       }
-      if (diagnosis?.ai_score) {
-        rows.push(['AI评分', '', `${diagnosis.ai_score.total}/100`, diagnosis.ai_score.overall_comment])
-        rows.push(['优化后AI摘要', '', optimized?.ai_summary_after || '', ''])
-      }
-
-      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('
-')
-      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
+      if (optimized?.search_terms) rows.push(['Search Terms', '', optimized.search_terms, ''])
+      if (diagnosis?.ai_score) rows.push(['AI评分', '', diagnosis.ai_score.total + '/100', diagnosis.ai_score.overall_comment || ''])
+      const csv = rows.map(r => r.map(c => '"' + c.replace(/"/g, '""') + '"').join(',')).join('\n')
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a'); a.href = url; a.download = 'listing_optimization.csv'; a.click()
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'listing_optimization.csv'
+      a.click()
       URL.revokeObjectURL(url)
     }
 
@@ -422,6 +417,12 @@ Search Terms：${optimized.search_terms}`)
           <Alert message="诊断和优化已完成，可导出完整报告" type="success" showIcon />
           <Button block size="large" onClick={exportTXT} icon={<CheckCircleOutlined />}>
             导出优化报告 TXT
+          </Button>
+          <Button block size="large" onClick={exportWord}>
+            导出 Word 文档
+          </Button>
+          <Button block size="large" onClick={exportExcel}>
+            导出 Excel/CSV
           </Button>
           <Button block size="large" onClick={exportWord} icon={<CheckCircleOutlined />}>
             导出 Word 文档
