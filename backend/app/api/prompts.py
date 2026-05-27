@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/prompts", tags=["prompts"])
 DEFAULTS = {
     "product_research": PRODUCT_DEFAULT,
     "listing": LISTING_DEFAULT,
+    "voc_analysis": "",
 }
 
 
