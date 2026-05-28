@@ -643,7 +643,12 @@ export default function ListingCreator() {
                   }
                 </Card>
 
-                <Card title={<Space><Tag color="green">Bullets</Tag><Text>五点描述</Text></Space>} style={{ borderRadius: 12 }}>
+                <Card title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Space><Tag color="green">Bullets</Tag><Text>五点描述</Text></Space>
+                    <Text copyable={{ text: (editingListing.bullets || []).join('\n\n') }} style={{ fontSize: 12, color: '#999' }}>复制全部五点</Text>
+                  </div>
+                } style={{ borderRadius: 12 }}>
                   <Space direction="vertical" style={{ width: '100%' }}>
                     {(editingListing.bullets || []).map((b, i) => (
                       <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
