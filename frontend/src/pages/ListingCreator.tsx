@@ -662,7 +662,12 @@ export default function ListingCreator() {
                   </Space>
                 </Card>
 
-                <Card title={<Space><Tag color="purple">Description</Tag><Text>产品描述（{editingListing.description?.length || 0}字符）</Text></Space>} style={{ borderRadius: 12 }}>
+                <Card title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Space><Tag color="purple">Description</Tag><Text>产品描述（{editingListing.description?.length || 0}字符）</Text></Space>
+                    <Text copyable={{ text: (editingListing.description || '').replace(/<[^>]*>/g, '').replace(/\n\n+/g, '\n\n').trim() }} style={{ fontSize: 12, color: '#999' }}>复制纯文本</Text>
+                  </div>
+                } style={{ borderRadius: 12 }}>
                   {isEditing
                     ? <TextArea value={editingListing.description} autoSize={{ minRows: 4 }} onChange={e => setEditingListing(p => p ? { ...p, description: e.target.value } : p)} />
                     : <div>
