@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://localhost:3000,http://localhost:80"
     sorftime_mcp_url: str = ""
     sorftime_mcp_api_key: str = ""
+    sorftime_keyword_max_pages: int = 10  # 关键词扩展最多翻几页（每页20条），可用 SORFTIME_KEYWORD_MAX_PAGES 覆盖
     maijia_mcp_url: str = ""
     maijia_mcp_api_key: str = ""
     anthropic_api_key: str = ""

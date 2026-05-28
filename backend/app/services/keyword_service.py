@@ -100,23 +100,26 @@ async def _fetch_asin_keywords(asin: str, site: str) -> List[Dict]:
 
 
 async def _fetch_keyword_extends(keyword: str, site: str) -> List[Dict]:
-    """从Sorftime扩展关键词"""
+    """从Sorftime扩展关键词，翻页拉取最多5页（每页20条，共~100条）"""
     mcp_url = settings.sorftime_mcp_url
     api_key = settings.sorftime_mcp_api_key
 
     if not mcp_url or not api_key:
         return []
 
+    keywords: List[Dict] = []
+    max_pages = getattr(settings, "sorftime_keyword_max_pages", 10)  # 可配置，默认10页
     try:
-        result = await call_sorftime_tool(
-            "keyword_extends",
-            {"keyword": keyword, "keywordSupportSite": site},
-            mcp_url, api_key
-        )
-        if result and isinstance(result, dict):
-            items = result.get("data", result.get("list", []))
-            keywords = []
-            for item in items[:30]:
+        for page in range(1, max_pages + 1):  # 每页20条
+            result = await call_sorftime_tool(
+                "keyword_extends",
+                {"keyword": keyword, "keywordSupportSite": site, "page": page},
+                mcp_url, api_key,
+            )
+            items = result if isinstance(result, list) else result.get("data", result.get("list", []))
+            if not items:
+                break
+            for item in items:
                 kw = item.get("关键词") or item.get("keyword") or item.get("extendKeyword", "")
                 if kw:
                     keywords.append({
@@ -125,12 +128,12 @@ async def _fetch_keyword_extends(keyword: str, site: str) -> List[Dict]:
                         "cpc": item.get("cpc推荐竞价", ""),
                         "source": f"extend:{keyword}",
                     })
-            return keywords
+            if len(items) < 20:  # 不足一页说明没有更多
+                break
+        logger.info("关键词 %s 扩展获取 %d 个词", keyword, len(keywords))
     except Exception as e:
         logger.warning("Sorftime关键词扩展失败 %s: %s", keyword, e)
-
-    return []
-
+    return keywords
 
 async def _fetch_keyword_detail(keyword: str, site: str) -> Dict:
     """获取关键词详情（搜索量、竞争度、CPC）"""
