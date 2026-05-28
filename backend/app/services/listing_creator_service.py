@@ -188,33 +188,35 @@ async def generate_listing_copy(
 
 def _build_copy_prompt(input_data: dict, analysis: Optional[dict]) -> str:
     product_name = input_data.get('product_name', '')
-    brand_name = input_data.get('brand_name', '')
-    description = input_data.get('product_description', '')
+    brand_name   = input_data.get('brand_name', '')
+    description  = input_data.get('product_description', '')
     differentiation = input_data.get('differentiation', '')
-    keywords = input_data.get('core_keywords', '')
-    site = input_data.get('site', 'US')
+    keywords     = input_data.get('core_keywords', '')
+    site         = input_data.get('site', 'US')
+    voc_data     = input_data.get('voc_data', '')
 
     analysis_str = ""
     if analysis:
-        cosmo = analysis.get('cosmo', {})
-        voc = analysis.get('voc_insights', {})
+        cosmo  = analysis.get('cosmo', {})
+        voc    = analysis.get('voc_insights', {})
         market = analysis.get('market', {})
+        pos_themes = voc.get('positive_themes', [])
+        neg_themes = voc.get('negative_themes', [])
+        voc_pos = '; '.join([f"{t['name']}({t.get('percentage','')}): {t.get('listing_tip','')}" for t in pos_themes])
+        voc_neg = '; '.join([f"{t['name']}({t.get('percentage','')}): {t.get('solution','')}" for t in neg_themes])
         analysis_str = f"""
-COSMO分析结果：
-产品定位：{cosmo.get('product_positioning', '')}
-差异化机会：{', '.join(cosmo.get('differentiation_opportunities', []))}
-关键词分组：{json.dumps(cosmo.get('keyword_groups', {}), ensure_ascii=False)}
-
-VOC洞察：
-正面主题：{', '.join([t['name'] for t in voc.get('positive_themes', [])])}
-负面主题：{', '.join([t['name'] for t in voc.get('negative_themes', [])])}
-负面解决方案：{'; '.join([t.get('solution','') for t in voc.get('negative_themes', [])])}
-
-市场数据：
-竞争格局：{market.get('competition', '')}
-价格区间：{market.get('price_range', '')}
-流量关键词：{', '.join(market.get('keywords', []))}
+三源分析结果：
+[COSMO] 产品定位：{cosmo.get('product_positioning', '')}
+[COSMO] 差异化机会：{', '.join(cosmo.get('differentiation_opportunities', []))}
+[COSMO] 关键词分组：{json.dumps(cosmo.get('keyword_groups', {}), ensure_ascii=False)}
+[VOC正面] {voc_pos}
+[VOC负面] {voc_neg}
+[市场] 竞争格局：{market.get('competition', '')}
+[市场] 价格区间：{market.get('price_range', '')}
+[市场] 流量关键词：{', '.join(market.get('keywords', []))}
 """
+
+    voc_section = f"\n已有VOC报告：\n{voc_data[:3000]}" if voc_data else ""
 
     policy_context = get_policy_context(["compliance", "listing_rules"])
     policy_section = f"""
@@ -222,37 +224,61 @@ VOC洞察：
 {policy_context}
 """ if policy_context else ""
 
-    return f"""你是亚马逊Listing文案专家，专注{site}市场。基于以下信息生成高转化率的英文Listing文案。
+    return f"""【角色】
+你是一位精通亚马逊A9算法和COSMO算法的Listing文案专家，擅长三源融合写法。
 
-产品信息：
+2026年亚马逊已从"关键词匹配"转向"用户意图理解"。文案必须同时满足：
+- 人类买家：扫视习惯，前5个词决定生死，需要情感共鸣+信任感
+- AI算法（Rufus/COSMO）：语义清晰、结构化信息、自然语言表达
+
+【三源融合原则】
+- COSMO（说什么）：用户为什么买？在什么场景下用？解决什么问题？
+- VOC（怎么说）：好评高频表达=卖点，差评痛点=差异化，买家真实措辞>你的想象
+- 关键词（用什么词）：ABA高频词优先嵌入，搜索量最大的词放标题，中等词放BP，长尾词放ST
+
+【2026合规红线】
+标题禁止：特殊字符（★♛♥等）、促销词（sale/discount/free shipping）、主观描述（best/top/amazing/#1）、同一关键词重复超过2次
+BP禁止：虚假认证、竞品品牌名、未经证实的"第一/最好"、价格信息
+Description禁止：联系方式、时效性促销、其他ASIN推荐
+{policy_section}
+
+【产品信息】
 品牌：{brand_name}
 产品名：{product_name}
-描述：{description}
-差异化：{differentiation}
+产品描述：{description}
+差异化卖点：{differentiation}
 核心关键词：{keywords}
+目标市场：{site}
+{analysis_str}{voc_section}
 
-{analysis_str}
-
-要求：
-1. 标题：200字符以内，前80字符包含最重要关键词，自然流畅不堆砌
-2. 五点：每点150-200字符，用大写关键词开头，突出卖点同时回应差评痛点
-3. 描述：800-1500字符，讲故事，强化使用场景和情感价值
-4. Search Terms：250字符以内，不重复标题和五点已有关键词
-5. 合规自检：生成完成后检查是否违反上方政策要求，有违规词立即替换
-
-请严格返回以下JSON格式：
+【输出要求】严格返回以下JSON格式：
 
 {{
-  "title": "英文标题",
+  "title_a": "版本A（核心词前置）：≤200字符",
+  "title_b": "版本B（场景/痛点驱动）：≤200字符",
+  "title": "默认使用title_a的内容",
   "bullets": [
-    "KEYWORD: 五点1内容",
-    "KEYWORD: 五点2内容",
-    "KEYWORD: 五点3内容",
-    "KEYWORD: 五点4内容",
-    "KEYWORD: 五点5内容"
+    "KEYWORD TAG: BP1内容（对应VOC好评#1，150-500字符，禁止使用**markdown**格式）",
+    "KEYWORD TAG: BP2内容（解除最大顾虑，150-500字符）",
+    "KEYWORD TAG: BP3内容（差异化证据，150-500字符）",
+    "KEYWORD TAG: BP4内容（场景延展，150-500字符）",
+    "KEYWORD TAG: BP5内容（信任与保障，150-500字符）"
   ],
-  "description": "英文产品描述",
-  "search_terms": "keyword1, keyword2, keyword3"
+  "description": "HTML格式英文描述，严格控制在1800字符以内，超过必须删减，禁止在文案中使用**markdown加粗**格式，只用HTML标签",
+  "search_terms": "全小写 空格分隔 不重复title/bp已有词 ≤249字节",
+  "qa_checklist": {{
+    "title_70chars": "前70字符截断效果说明",
+    "keyword_coverage": "TOP关键词覆盖情况",
+    "voc_mapping": "每条BP对应的VOC来源",
+    "compliance_check": "pass或fail及说明",
+    "rufus_friendly": "yes或no及说明",
+    "st_dedup": "ST去重检查结果"
+  }},
+  "keyword_coverage_table": [
+    {{"keyword": "关键词1", "volume": "高", "title": true, "bullets": false, "description": false, "st": false}},
+    {{"keyword": "关键词2", "volume": "中", "title": false, "bullets": true, "description": false, "st": false}}
+  ],
+  "next_steps": ["优化建议1", "优化建议2", "优化建议3"]
 }}"""
 
 
@@ -306,7 +332,7 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
         for key in keys:
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
-                payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 4096}}
+                payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 8192}}
                 async with httpx.AsyncClient(timeout=120) as client:
                     resp = await client.post(url, json=payload)
                     resp.raise_for_status()
@@ -358,4 +384,14 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
                 return json.loads(match.group())
             except:
                 pass
+    # 最后尝试：提取第一个 { 到最后一个 } 之间的内容
+    try:
+        first = text.index('{')
+        last = text.rindex('}')
+        try:
+            return json.loads(text[first:last+1])
+        except:
+            pass
+    except:
+        pass
     return {"raw": text}

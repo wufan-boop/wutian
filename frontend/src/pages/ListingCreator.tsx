@@ -171,8 +171,12 @@ export default function ListingCreator() {
           const p = JSON.parse(line.slice(6))
           if (p.type === 'status') setStatusMsg(p.content)
           else if (p.type === 'done') {
-            setListing(p.listing)
-            setEditingListing(p.listing)
+            const listing = p.listing
+            if (listing.title_a && !listing.title) {
+              listing.title = listing.title_a
+            }
+            setListing(listing)
+            setEditingListing(listing)
           } else if (p.type === 'error') {
             message.error(p.content)
           }
@@ -599,12 +603,35 @@ export default function ListingCreator() {
 
             {editingListing && (
               <Space direction="vertical" style={{ width: '100%' }} size={16}>
-                <Card title={
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Space><Tag color="blue">Title</Tag><Text>标题（{editingListing.title?.length || 0}字符）</Text></Space>
+                <Card title={<Space><Tag color="blue">Title</Tag><Text>标题</Text></Space>} style={{ borderRadius: 12 }}>
+                  {(editingListing.title_a || editingListing.title_b) && (
+                    <div style={{ marginBottom: 16 }}>
+                      {editingListing.title_a && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <Tag color="blue">A版·核心词前置</Tag>
+                            <Text type="secondary" style={{ fontSize: 12 }}>{editingListing.title_a.length}字符</Text>
+                            <Button size="small" onClick={() => setEditingListing(p => p ? { ...p, title: p.title_a || '' } : p)}>使用A版</Button>
+                          </div>
+                          <div style={{ padding: '8px 12px', background: '#e6f4ff', borderRadius: 6, fontSize: 13 }}>{editingListing.title_a}</div>
+                        </div>
+                      )}
+                      {editingListing.title_b && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <Tag color="purple">B版·场景驱动</Tag>
+                            <Text type="secondary" style={{ fontSize: 12 }}>{editingListing.title_b.length}字符</Text>
+                            <Button size="small" onClick={() => setEditingListing(p => p ? { ...p, title: p.title_b || '' } : p)}>使用B版</Button>
+                          </div>
+                          <div style={{ padding: '8px 12px', background: '#f9f0ff', borderRadius: 6, fontSize: 13 }}>{editingListing.title_b}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>当前选用（{editingListing.title?.length || 0}字符）</Text>
                     <Button size="small" icon={<EditOutlined />} onClick={() => setIsEditing(!isEditing)}>{isEditing ? '完成' : '编辑'}</Button>
                   </div>
-                } style={{ borderRadius: 12 }}>
                   {isEditing
                     ? <Input value={editingListing.title} onChange={e => setEditingListing(p => p ? { ...p, title: e.target.value } : p)} />
                     : <Text copyable>{editingListing.title}</Text>
@@ -628,7 +655,10 @@ export default function ListingCreator() {
                 <Card title={<Space><Tag color="purple">Description</Tag><Text>产品描述（{editingListing.description?.length || 0}字符）</Text></Space>} style={{ borderRadius: 12 }}>
                   {isEditing
                     ? <TextArea value={editingListing.description} autoSize={{ minRows: 4 }} onChange={e => setEditingListing(p => p ? { ...p, description: e.target.value } : p)} />
-                    : <Paragraph copyable>{editingListing.description}</Paragraph>
+                    : <div>
+                        <div dangerouslySetInnerHTML={{ __html: editingListing.description }} style={{ fontSize: 14, lineHeight: 1.7, color: '#333' }} />
+                        <Text copyable={{ text: editingListing.description }} style={{ fontSize: 12, color: '#999' }}>复制原始HTML</Text>
+                      </div>
                   }
                 </Card>
 
