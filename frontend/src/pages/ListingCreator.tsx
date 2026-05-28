@@ -50,9 +50,14 @@ interface ListingInput {
 
 interface ListingCopy {
   title: string
+  title_a?: string
+  title_b?: string
   bullets: string[]
   description: string
   search_terms: string
+  qa_checklist?: Record<string, string>
+  keyword_coverage_table?: Array<{keyword: string, volume: string, title: boolean, bullets: boolean, description: boolean, st: boolean}>
+  next_steps?: string[]
 }
 
 interface AnalysisData {
