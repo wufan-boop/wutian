@@ -817,6 +817,28 @@ export default function ListingCreator() {
                   <Button icon={<DownloadOutlined />} size="large" onClick={exportTXT} block>
                     导出文案（TXT）
                   </Button>
+                  <Button icon={<DownloadOutlined />} size="large" onClick={() => {
+                    if (!editingListing) return
+                    const rows = [
+                      ['字段', '内容'],
+                      ['Title A版', editingListing.title_a || ''],
+                      ['Title B版', editingListing.title_b || ''],
+                      ['Title 当前选用', editingListing.title || ''],
+                      ...((editingListing.bullets || []).map((b, i) => [`Bullet ${i+1}`, b])),
+                      ['Description（纯文本）', (editingListing.description || '').replace(/<[^>]*>/g, '').replace(/\n\n+/g, ' ').trim()],
+                      ['Search Terms', editingListing.search_terms || ''],
+                    ]
+                    const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n')
+                    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `Listing_${input.product_name || 'export'}_${new Date().toISOString().slice(0,10)}.csv`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }} block>
+                    导出文案（Excel/CSV）
+                  </Button>
                   <Button icon={<RocketOutlined />} size="large" onClick={() => setCurrentStep(2)} block>
                     ← 返回编辑文案
                   </Button>
