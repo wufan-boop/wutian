@@ -679,6 +679,72 @@ export default function ListingCreator() {
                   }
                 </Card>
 
+                {/* 质检表 */}
+                {editingListing.qa_checklist && Object.keys(editingListing.qa_checklist).length > 0 && (
+                  <Card title={<Space><Tag color="gold">质检表</Tag><Text>6项合规检查</Text></Space>} style={{ borderRadius: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {Object.entries(editingListing.qa_checklist).map(([key, val]) => {
+                        const labels: Record<string, string> = {
+                          title_70chars: '前70字符截断',
+                          keyword_coverage: '关键词覆盖',
+                          voc_mapping: 'VOC对应',
+                          compliance_check: '合规检查',
+                          rufus_friendly: 'Rufus友好度',
+                          st_dedup: 'ST去重',
+                        }
+                        const isPass = String(val).toLowerCase().includes('pass') || String(val).toLowerCase().includes('yes')
+                        const isFail = String(val).toLowerCase().includes('fail') || String(val).toLowerCase().includes('no')
+                        return (
+                          <div key={key} style={{ padding: '8px 10px', background: isPass ? '#f6ffed' : isFail ? '#fff2f0' : '#fafafa', borderRadius: 6, borderLeft: `3px solid ${isPass ? '#52c41a' : isFail ? '#ff4d4f' : '#d9d9d9'}` }}>
+                            <Text strong style={{ fontSize: 12, display: 'block' }}>{labels[key] || key}</Text>
+                            <Text style={{ fontSize: 12, color: '#555' }}>{String(val)}</Text>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </Card>
+                )}
+
+                {/* 关键词覆盖率 */}
+                {editingListing.keyword_coverage_table && editingListing.keyword_coverage_table.length > 0 && (
+                  <Card title={<Space><Tag color="cyan">关键词覆盖率</Tag></Space>} style={{ borderRadius: 12 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: '#f5f5f5' }}>
+                          {['关键词', '量级', 'Title', 'BP', 'Desc', 'ST'].map(h => (
+                            <th key={h} style={{ padding: '6px 10px', textAlign: 'left', border: '1px solid #e8e8e8' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {editingListing.keyword_coverage_table.map((row, i) => (
+                          <tr key={i} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                            <td style={{ padding: '5px 10px', border: '1px solid #e8e8e8', fontWeight: 500 }}>{row.keyword}</td>
+                            <td style={{ padding: '5px 10px', border: '1px solid #e8e8e8' }}>
+                              <Tag color={row.volume === '高' ? 'red' : row.volume === '中' ? 'orange' : 'default'} style={{ fontSize: 11 }}>{row.volume}</Tag>
+                            </td>
+                            {(['title', 'bullets', 'description', 'st'] as const).map(field => (
+                              <td key={field} style={{ padding: '5px 10px', border: '1px solid #e8e8e8', textAlign: 'center' }}>
+                                {row[field] ? <span style={{ color: '#52c41a' }}>✓</span> : <span style={{ color: '#d9d9d9' }}>—</span>}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </Card>
+                )}
+
+                {editingListing.next_steps && editingListing.next_steps.length > 0 && (
+                  <Card title={<Space><Tag color="lime">下一步建议</Tag></Space>} style={{ borderRadius: 12 }}>
+                    {editingListing.next_steps.map((step, i) => (
+                      <div key={i} style={{ padding: '4px 0', fontSize: 13, color: '#555' }}>
+                        <span style={{ color: '#0071e3', marginRight: 8 }}>{i + 1}.</span>{step}
+                      </div>
+                    ))}
+                  </Card>
+                )}
+
                 <Button type="primary" size="large" onClick={generateImageStrategy}>下一步：图片策略 →</Button>
               </Space>
             )}
