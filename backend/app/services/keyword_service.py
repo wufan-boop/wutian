@@ -42,21 +42,23 @@ QUADRANT_LABELS = {
 # ─── 数据采集 ─────────────────────────────────────────────────────────────────
 
 async def _fetch_asin_keywords(asin: str, site: str) -> List[Dict]:
-    """从Sorftime反查ASIN流量词"""
+    """从Sorftime反查ASIN流量词，翻页拉取最多150条"""
     mcp_url = settings.sorftime_mcp_url
     api_key = settings.sorftime_mcp_api_key
     if not mcp_url or not api_key:
         return []
+    keywords = []
     try:
-        result = await call_sorftime_tool(
-            "product_traffic_terms",
-            {"asin": asin, "amzSite": site},
-            mcp_url, api_key
-        )
-        if result:
+        for page in range(1, 6):  # 最多拉5页，每页20条，共100条
+            result = await call_sorftime_tool(
+                "product_traffic_terms",
+                {"asin": asin, "amzSite": site, "page": page},
+                mcp_url, api_key
+            )
             items = result if isinstance(result, list) else result.get("data", [])
-            keywords = []
-            for item in items[:50]:
+            if not items:
+                break
+            for item in items:
                 kw = item.get("关键词") or item.get("keyword", "")
                 if kw:
                     keywords.append({
@@ -65,10 +67,12 @@ async def _fetch_asin_keywords(asin: str, site: str) -> List[Dict]:
                         "cpc": item.get("推荐竞价", ""),
                         "source": f"asin:{asin}",
                     })
-            return keywords
+            if len(items) < 20:  # 不足一页说明没有更多数据
+                break
+        logger.info("ASIN %s 共获取 %d 个关键词", asin, len(keywords))
     except Exception as e:
         logger.warning("Sorftime ASIN反查失败 %s: %s", asin, e)
-    return []
+    return keywords
 
     try:
         # 尝试卖家精灵的traffic_keyword工具

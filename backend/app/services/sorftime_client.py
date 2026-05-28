@@ -29,9 +29,9 @@ async def call_sorftime_tool(
         "params": {"name": tool_name, "arguments": arguments},
     }
     headers = {
-        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
+    # key已包含在mcp_url中（?key=xxx），无需Authorization header
     try:
         async with httpx.AsyncClient(timeout=timeout) as http:
             resp = await http.post(mcp_url, json=payload, headers=headers)
@@ -66,7 +66,7 @@ async def call_sorftime_tool(
                         # text might already be the data we want as a string
                         return {"raw": text}
 
-        logger.warning("sorftime_client: no parseable data in response for tool=%s", tool_name)
+        logger.warning("sorftime_client: no parseable data in response for tool=%s raw=%s", tool_name, raw[:200])
         return {}
     except Exception as exc:
         logger.warning("sorftime_client: error calling tool=%s: %s", tool_name, exc)
