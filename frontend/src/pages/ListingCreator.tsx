@@ -22,6 +22,24 @@ import {
 } from 'antd'
 import { useState } from 'react'
 
+// ── 描述 HTML → 纯文本 / 分段 工具 ──
+const descToPlainText = (html: string = ''): string =>
+  (html || '')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<\/(p|div|li|ul|ol)>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+const descToSections = (html: string = ''): string[] =>
+  descToPlainText(html).split(/\n\s*\n/).map(s => s.trim()).filter(Boolean)
+
+
 const { Title, Text, Paragraph } = Typography
 const { TextArea } = Input
 
@@ -665,13 +683,25 @@ export default function ListingCreator() {
                 <Card title={
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Space><Tag color="purple">Description</Tag><Text>产品描述（{editingListing.description?.length || 0}字符）</Text></Space>
-                    <Text copyable={{ text: (editingListing.description || '').replace(/<[^>]*>/g, '').replace(/\n\n+/g, '\n\n').trim() }} style={{ fontSize: 12, color: '#999' }}>复制纯文本</Text>
+                    <Text copyable={{ text: descToPlainText(editingListing.description) }} style={{ fontSize: 12, color: '#999' }}>复制全部描述</Text>
                   </div>
                 } style={{ borderRadius: 12 }}>
                   {isEditing
                     ? <TextArea value={editingListing.description} autoSize={{ minRows: 4 }} onChange={e => setEditingListing(p => p ? { ...p, description: e.target.value } : p)} />
                     : <div>
-                        <div dangerouslySetInnerHTML={{ __html: editingListing.description }} style={{ fontSize: 14, lineHeight: 1.7, color: '#333' }} />
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          {descToSections(editingListing.description).map((sec, i) => {
+                            const lines = sec.split('\n')
+                            return (
+                              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                <Tag color="purple" style={{ flexShrink: 0, marginTop: 2 }}>{i + 1}</Tag>
+                                <Text copyable={{ text: sec }} style={{ flex: 1, whiteSpace: 'pre-wrap' }}>
+                                  {lines.length > 1 ? <><strong>{lines[0]}</strong>{'\n' + lines.slice(1).join('\n')}</> : sec}
+                                </Text>
+                              </div>
+                            )
+                          })}
+                        </Space>
                         <Text copyable={{ text: editingListing.description }} style={{ fontSize: 12, color: '#999' }}>复制原始HTML</Text>
                       </div>
                   }
