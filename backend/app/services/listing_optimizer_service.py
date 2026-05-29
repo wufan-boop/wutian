@@ -179,6 +179,7 @@ def _build_optimize_prompt(title: str, bullets: str, comp_details: list, site: s
 3. 每条Bullet结构：大写卖点事实 - 具体描述（含数据或场景）- 买家得到什么
 4. 整体文案要让AI购物助手能直接复述成有说服力的30字摘要
 5. 保留原有核心关键词，补充竞品有但原文缺失的高价值词
+6. Amazon字数硬上限(必须遵守)：标题≤200字符；每条Bullet 150-500字符；Search Terms≤249字节。超限必须精简，绝不超标
 
 现有标题：{title}
 现有五点：

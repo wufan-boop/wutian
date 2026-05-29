@@ -248,6 +248,8 @@ async def _call_ai(prompt: str, model: str) -> Dict:
 
     if model == "gemini":
         return await _call_gemini(prompt)
+    elif model == "gemini-pro":
+        return await _call_gemini(prompt, "gemini-2.5-pro")
     elif model == "deepseek":
         return await _call_deepseek(prompt)
     elif model == "claude":
@@ -258,12 +260,12 @@ async def _call_ai(prompt: str, model: str) -> Dict:
         return await _call_gemini(prompt)
 
 
-async def _call_gemini(prompt: str) -> Dict:
+async def _call_gemini(prompt: str, gmodel: str = "gemini-2.5-flash") -> Dict:
     import httpx
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={settings.gemini_api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{gmodel}:generateContent?key={settings.gemini_api_key}"
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 8192, "thinkingConfig": {"thinkingBudget": 0}}
+        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 16384 if "pro" in gmodel else 8192, "thinkingConfig": {"thinkingBudget": -1 if "pro" in gmodel else 0}}
     }
     async with httpx.AsyncClient(timeout=120) as client:
         resp = await client.post(url, json=payload)

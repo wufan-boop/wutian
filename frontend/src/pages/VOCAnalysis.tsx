@@ -54,6 +54,7 @@ const STEPS = ['1. 输入', '2. 评论采集&分析', '3. VOC报告', '4. 导出
 const AI_MODELS = [
   { value: 'deepseek', label: 'DeepSeek V4（推荐·省成本）' },
   { value: 'gemini', label: 'Gemini 2.5 Flash（快速）' },
+  { value: 'gemini-pro', label: 'Gemini 2.5 Pro（深度·较慢）' },
   { value: 'claude', label: 'Claude Sonnet 4.6（深度分析）' },
   { value: 'gpt4o', label: 'GPT-4o（待充值）' },
 ]

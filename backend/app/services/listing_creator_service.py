@@ -360,13 +360,13 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
             resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"]
 
-    async def call_gemini():
+    async def call_gemini(gmodel: str = "gemini-2.5-flash"):
         keys = [k for k in [settings.gemini_api_key, settings.gemini_api_key_2] if k]
         last_err = None
         for key in keys:
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
-                payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 8192, "thinkingConfig": {"thinkingBudget": 0}}}
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{gmodel}:generateContent?key={key}"
+                payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 16384 if "pro" in gmodel else 8192, "thinkingConfig": {"thinkingBudget": -1 if "pro" in gmodel else 0}}}
                 async with httpx.AsyncClient(timeout=120) as client:
                     resp = await client.post(url, json=payload)
                     resp.raise_for_status()
@@ -401,6 +401,8 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
 
     if model == "gemini":
         text = await call_gemini()
+    elif model == "gemini-pro":
+        text = await call_gemini("gemini-2.5-pro")
     elif model == "claude":
         text = await call_claude()
     elif model in ("gpt4o", "gpt4o_mini"):
