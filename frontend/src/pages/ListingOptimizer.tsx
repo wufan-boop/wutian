@@ -20,6 +20,7 @@ import {
 } from 'antd'
 import { useState } from 'react'
 import { useAuthStore } from '../store/auth'
+import { usePersistedState } from '../hooks/usePersistedState'
 
 const { Title, Text, Paragraph } = Typography
 const { TextArea } = Input
@@ -37,13 +38,13 @@ const STEPS = ['1. 产品输入', '2. 文案诊断', '3. 优化方案', '4. 导�
 export default function ListingOptimizer() {
   const { message } = AntApp.useApp()
   const { token } = useAuthStore()
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = usePersistedState('lo:step', 0)
   const [loading, setLoading] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
-  const [diagnosis, setDiagnosis] = useState<any>(null)
-  const [optimized, setOptimized] = useState<any>(null)
+  const [diagnosis, setDiagnosis] = usePersistedState<any>('lo:diag', null)
+  const [optimized, setOptimized] = usePersistedState<any>('lo:opt', null)
   const [form] = Form.useForm()
-  const [aiModel, setAiModel] = useState('deepseek')
+  const [aiModel, setAiModel] = usePersistedState('lo:model', 'deepseek')
 
   async function runStream(values: any, mode: string) {
     setLoading(true)

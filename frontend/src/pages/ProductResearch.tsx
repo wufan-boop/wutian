@@ -35,6 +35,7 @@ import {
 } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import client from '../api/client'
+import { usePersistedState } from '../hooks/usePersistedState'
 
 const { TextArea } = Input
 const { Panel } = Collapse
@@ -775,12 +776,12 @@ export default function ProductResearch() {
   const [form] = Form.useForm()
   const [projects, setProjects] = useState<Project[]>([])
   const [activeProject, setActiveProject] = useState<string | null>(null)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [selectedMode, setSelectedMode] = useState('keyword')
-  const [analysisStatus, setAnalysisStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [currentStep, setCurrentStep] = usePersistedState('pr:step', 0)
+  const [selectedMode, setSelectedMode] = usePersistedState('pr:mode', 'keyword')
+  const [analysisStatus, setAnalysisStatus] = usePersistedState<'idle' | 'loading' | 'done' | 'error'>('pr:status', 'idle')
   const [statusMsg, setStatusMsg] = useState('')
-  const [result, setResult] = useState('')
-  const [margin, setMargin] = useState<number | null>(null)
+  const [result, setResult] = usePersistedState('pr:result', '')
+  const [margin, setMargin] = usePersistedState<number | null>('pr:margin', null)
   const [streaming, setStreaming] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 

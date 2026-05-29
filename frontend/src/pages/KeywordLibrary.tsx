@@ -28,6 +28,7 @@ import {
   Statistic,
 } from 'antd'
 import { useEffect, useRef, useState } from 'react'
+import { usePersistedState } from '../hooks/usePersistedState'
 
 const { TextArea } = Input
 
@@ -97,10 +98,10 @@ const COVERAGE_COLORS: Record<string, string> = {
 export default function KeywordLibrary() {
   const { message } = AntApp.useApp()
   const [form] = Form.useForm()
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = usePersistedState('kw:step', 0)
   const [streaming, setStreaming] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
-  const [project, setProject] = useState<Project | null>(null)
+  const [project, setProject] = usePersistedState<Project | null>('kw:project', null)
   const [filterQuadrant, setFilterQuadrant] = useState<string>('all')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterCoverage, setFilterCoverage] = useState<string>('all')

@@ -22,6 +22,7 @@ import {
   Typography,
 } from 'antd'
 import { useState } from 'react'
+import { usePersistedState } from '../hooks/usePersistedState'
 
 const { Title, Text, Paragraph } = Typography
 
@@ -61,12 +62,12 @@ const AI_MODELS = [
 
 export default function VOCAnalysis() {
   const { message } = AntApp.useApp()
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = usePersistedState('voc:step', 0)
   const [analyzing, setAnalyzing] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
-  const [report, setReport] = useState<VOCReport | null>(null)
+  const [report, setReport] = usePersistedState<VOCReport | null>('voc:report', null)
   const [activeTab, setActiveTab] = useState('overview')
-  const [input, setInput] = useState<VOCInput>({
+  const [input, setInput] = usePersistedState<VOCInput>('voc:input', {
     asin: '',
     competitor_asins: '',
     site: 'US',

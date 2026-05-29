@@ -21,6 +21,7 @@ import {
   Typography,
 } from 'antd'
 import { useState } from 'react'
+import { usePersistedState } from '../hooks/usePersistedState'
 
 // ── 描述 HTML → 纯文本 / 分段 工具 ──
 const descToPlainText = (html: string = ''): string =>
@@ -87,18 +88,18 @@ interface AnalysisData {
 
 export default function ListingCreator() {
   const { message } = AntApp.useApp()
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = usePersistedState('lc:step', 0)
   const [analyzing, setAnalyzing] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [statusMsg, setStatusMsg] = useState('')
-  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null)
+  const [analysisData, setAnalysisData] = usePersistedState<AnalysisData | null>('lc:analysis', null)
   const [analysisTab, setAnalysisTab] = useState('cosmo')
-  const [listing, setListing] = useState<ListingCopy | null>(null)
-  const [imageStrategy, setImageStrategy] = useState<string[]>([])
-  const [editingListing, setEditingListing] = useState<ListingCopy | null>(null)
+  const [listing, setListing] = usePersistedState<ListingCopy | null>('lc:listing', null)
+  const [imageStrategy, setImageStrategy] = usePersistedState<string[]>('lc:imgs', [])
+  const [editingListing, setEditingListing] = usePersistedState<ListingCopy | null>('lc:editing', null)
   const [isEditing, setIsEditing] = useState(false)
 
-  const [input, setInput] = useState<ListingInput>({
+  const [input, setInput] = usePersistedState<ListingInput>('lc:input', {
     asin: '',
     competitor_asins: '',
     brand_name: '',
