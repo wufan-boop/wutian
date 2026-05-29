@@ -264,7 +264,7 @@ Description禁止：联系方式、时效性促销、其他ASIN推荐
     "KEYWORD TAG: BP4内容（场景延展，150-500字符）",
     "KEYWORD TAG: BP5内容（信任与保障，150-500字符）"
   ],
-  "description": "HTML格式英文描述，严格控制在1800字符以内，超过必须删减，禁止在文案中使用**markdown加粗**格式，只用HTML标签",
+  "description": "HTML格式英文描述。去掉HTML标签后的纯文本必须≤1900字符(Amazon上限2000,留余量),宁可精简也不能超;禁止markdown加粗,只用HTML标签",
   "search_terms": "全小写 空格分隔 不重复title/bp已有词 ≤249字节",
   "qa_checklist": {{
     "title_70chars": "前70字符截断效果说明",
@@ -312,6 +312,31 @@ async def generate_image_strategy(
         yield sse("done", strategy=strategy)
     except Exception as e:
         yield sse("error", content=f"生成失败: {str(e)}")
+
+
+def _cap_description(html: str, limit: int = 2000) -> str:
+    import re as _re
+    if not html:
+        return html
+    if len(_re.sub(r'<[^>]+>', '', html)) <= limit:
+        return html
+    blocks = _re.findall(r'<(?:p|h[1-6]|ul|ol|div)[^>]*>.*?</(?:p|h[1-6]|ul|ol|div)>', html, _re.S)
+    if not blocks:
+        cut = _re.sub(r'<[^>]+>', '', html)[:limit]
+        return cut.rsplit(' ', 1)[0] if ' ' in cut else cut
+    out, total = [], 0
+    for b in blocks:
+        t = len(_re.sub(r'<[^>]+>', '', b))
+        if total + t > limit:
+            break
+        out.append(b); total += t
+    return ''.join(out) or blocks[0]
+
+
+def _cap_listing(d):
+    if isinstance(d, dict) and isinstance(d.get("description"), str):
+        d["description"] = _cap_description(d["description"])
+    return d
 
 
 async def _call_ai_json(prompt: str, model: str) -> dict:
@@ -381,12 +406,12 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
     text = re.sub(r'\s*```$', '', text)
     text = text.strip()
     try:
-        return json.loads(text)
+        return _cap_listing(json.loads(text))
     except:
         match = re.search(r'\{.*\}', text, re.DOTALL)
         if match:
             try:
-                return json.loads(match.group())
+                return _cap_listing(json.loads(match.group()))
             except:
                 pass
     # 最后尝试：提取第一个 { 到最后一个 } 之间的内容

@@ -682,7 +682,7 @@ export default function ListingCreator() {
 
                 <Card title={
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Space><Tag color="purple">Description</Tag><Text>产品描述（{editingListing.description?.length || 0}字符）</Text></Space>
+                    <Space><Tag color="purple">Description</Tag><Text style={{ color: descToPlainText(editingListing.description).length > 2000 ? '#f5222d' : undefined }}>产品描述（纯文本 {descToPlainText(editingListing.description).length}/2000 字符）</Text></Space>
                     <Text copyable={{ text: descToPlainText(editingListing.description) }} style={{ fontSize: 12, color: '#999' }}>复制全部描述</Text>
                   </div>
                 } style={{ borderRadius: 12 }}>
