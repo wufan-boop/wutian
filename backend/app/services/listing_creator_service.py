@@ -332,11 +332,16 @@ async def _call_ai_json(prompt: str, model: str) -> dict:
         for key in keys:
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
-                payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 8192}}
+                payload = {"contents": [{"parts": [{"text": prompt}]}], "generationConfig": {"temperature": 0.3, "maxOutputTokens": 8192, "thinkingConfig": {"thinkingBudget": 0}}}
                 async with httpx.AsyncClient(timeout=120) as client:
                     resp = await client.post(url, json=payload)
                     resp.raise_for_status()
-                    return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+                    d = resp.json()
+                    cand = (d.get("candidates") or [{}])[0]
+                    txt = "".join(p.get("text", "") for p in cand.get("content", {}).get("parts", [])).strip()
+                    if not txt:
+                        raise ValueError("Gemini返回空内容(thinking吃光或MAX_TOKENS)")
+                    return txt
             except Exception as e:
                 last_err = e
                 logger.warning("Gemini key失败，尝试下一个: %s", e)

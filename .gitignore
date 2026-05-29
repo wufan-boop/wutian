@@ -24,3 +24,8 @@ data/
 .idea/
 .vscode/
 .superpowers/
+
+.env
+.envy
+.env.*
+!.env.example
